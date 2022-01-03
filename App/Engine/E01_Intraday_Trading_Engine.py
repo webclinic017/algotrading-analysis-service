@@ -117,7 +117,7 @@ def controlStopLoss(activeCdls, strategy):
     # ToDo: Fine tune ORB - check what you have missed, vefiry in charts. May be later once engine is ready?
 
 
-def tradeEngine_IntraDay_Directional_NakedPosition (dayDF, selectedDate, strategy):
+def IntraDay_Directional_NakedPosition (dayDF, selectedDate, strategy):
 
     # if signal received
     if strategyScan.at[0, 'Signal'] == 'Bullish' or strategyScan.at[0, 'Signal'] == 'Bearish':

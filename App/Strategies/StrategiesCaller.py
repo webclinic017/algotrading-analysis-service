@@ -3,9 +3,11 @@ import pandas as pd
 
 
 
-def callStrategies():
+def execute(algo):
 
     results = pd.DataFrame()
-    print('callStrategies')
-    S01_ORB_Force("filteredDayDF", "selectedDate", results)
+    if (algo == 'S01_ORB'):
+        results = S01_ORB_Force("filteredDayDF", "selectedDate", results)
+    else:
+        return 'No Algo Found'
 

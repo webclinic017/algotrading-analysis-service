@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from typing import Optional
 from pydantic import BaseModel
 from  App.Strategies import StrategiesCaller
+from App.Engine import EngineCaller
 
 class Item(BaseModel):
     name: str
@@ -13,15 +14,22 @@ class Item(BaseModel):
 app = FastAPI()
 
 
-@app.get("/analyse/{algo_id}")
-def read_item(algo_id):
-    StrategiesCaller.callStrategies()
-    return {"item_id": algo_id}
+@app.get("/tradesignals/")
+def read_item(algo: str):
+    ret = StrategiesCaller.execute(algo)
+    return {"signals": ret}
 
 
-@app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    return {"item_name": item.name, "item_id": item_id}
+@app.get("/simulation/")
+def read_item(algo: str, symbol: str, startdate: str, enddate: str):
+    ret = StrategiesCaller.execute(algo)
+    return {"signals": ret}
+
+@app.get("/active-trades/")
+def read_item(algo: str, symbol: str, startdate: str, enddate: str):
+    ret = EngineCaller.execute(algo)
+    return {"signals": ret}
+
 
 
 if __name__ == "__main__":
