@@ -16,7 +16,7 @@ def execute(algo):
 
 
 
-    if (algo == 'IntraDay'):
+    if (algo == 'IntraDay_DNP'):
         results = IntraDay_Directional_NakedPosition("dayDF", "selectedDate", "strategy")
     else:
         return 'No Algo Found'

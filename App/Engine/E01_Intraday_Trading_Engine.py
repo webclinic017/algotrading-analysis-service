@@ -1,28 +1,9 @@
-# %% [markdown]
-# # Trading Engine
-# 
-# > Trades are directional and naked positions
-# 
-
-# %%
-# Date Filter
-NIFTY_DATA_FILTER = '2021' #'2020_02'
-
-# %%
-# Configuration Data
-cNIFTY50 = 'nifty50'
-cNIFTYBANK = 'banknifty'
-BASE_PATH = "/home/parag/devArea/pyStock"
 
 RESULTS_HEADER = ['Strategy', 'Date', 'Csize', 'Signal', \
                   'Entry', 'EntryTime', 'Target', 'SL', 'Exit', 'ExitTime', 'Reason', 'Result', 'ResultPerc', \
                          'SMax', 'SMaxD','SMaxTime', 'SMin', 'SMinD','SMinTime', 'ExitCriteria']
 
-# %%1
-# Import paths
-import os
-import sys
-import time
+
 import numpy as np
 import pandas as pd
 from time import strftime

@@ -1,14 +1,9 @@
 import os
 import json
 import psycopg2
-import datetime
 import pandas as pd
 from pgcopy import CopyManager
 from pandas.io.json import json_normalize
-
-
-COLUMNS = ('time', 'symbol', 'last_price', 'open', 'close', 'low', 'high', 'volume')
-
 
 def dbConnect():  # connect to database
 
@@ -42,33 +37,26 @@ def createAllTables(conn):
     if (db_table_exists(conn, 'signals_trading' )) == False:
         # create table
         tradingSignalsTblQuery = """CREATE TABLE signals_trading (
-            order_id SERIAL UNIQUE NOT NULL,
-            Strategy  VARCHAR(10) NOT NULL,
-            date DATE NOT NULL,
-            candle_size SMALLINT NOT NULL,
-            signal VARCHAR(50) NOT NULL,
-            entry DOUBLE PRECISION NOT NULL,
-            entry_time TIMESTAMP NOT NULL,
-            target DOUBLE PRECISION NOT NULL,
-            stoploss DOUBLE PRECISION NOT NULL,
+            strategy_id  VARCHAR(10) NOT NULL,
 
-            trade_confirmed_en BOOLEAN,
-            instr_token INTEGER,
-            stoploss_per SMALLINT NOT NULL,
-            deep_stoploss_per SMALLINT NOT NULL,
-            delayed_stopLoss_min TIME NOT NULL,
-            stall_detect_period_min TIME NOT NULL,
-            trail_target_en BOOLEAN NOT NULL,
-            position_reversal_en BOOLEAN NOT NULL,
+            s_order_id SERIAL UNIQUE NOT NULL,
+            s_date DATE NOT NULL,
+            s_direction VARCHAR(50) NOT NULL,
+            t_entry DOUBLE PRECISION NOT NULL,
+            t_entry_time TIMESTAMP NOT NULL,
+            s_target DOUBLE PRECISION NOT NULL,
+            s_stoploss DOUBLE PRECISION NOT NULL,
+            t_trade_confirmed_en BOOLEAN,
+            s_instr_token INTEGER,
 
-            exit_val DOUBLE PRECISION,
-            exit_time TIME,
-            exit_reason VARCHAR(100),
+            r_exit_val DOUBLE PRECISION,
+            r_exit_time TIME,
+            r_exit_reason VARCHAR(100),
 
-            swing_min DOUBLE PRECISION,
-            swing_max DOUBLE PRECISION,
-            swing_min_time TIME,
-            swing_max_time TIME
+            r_swing_min DOUBLE PRECISION,
+            r_swing_max DOUBLE PRECISION,
+            r_swing_min_time TIME,
+            r_swing_max_time TIME
         );"""
         cur = conn.cursor()
         cur.execute(tradingSignalsTblQuery)
@@ -78,34 +66,28 @@ def createAllTables(conn):
     if (db_table_exists(conn, 'signals_simulation' )) == False:
         # create table
         tradingSignalsTblQuery = """CREATE TABLE signals_simulation (
+            strategy_id  VARCHAR(10) NOT NULL,
             simulation_id INTEGER NOT NULL,
 
-            order_id SERIAL UNIQUE NOT NULL,
-            Strategy  VARCHAR(10) NOT NULL,
-            date DATE NOT NULL,
-            candle_size SMALLINT NOT NULL,
-            signal VARCHAR(50) NOT NULL,
-            entry DOUBLE PRECISION NOT NULL,
-            entry_time TIMESTAMP NOT NULL,
-            target DOUBLE PRECISION NOT NULL,
-            stoploss DOUBLE PRECISION NOT NULL,
+            s_order_id SERIAL UNIQUE NOT NULL,
+            s_date DATE NOT NULL,
+            s_direction VARCHAR(50) NOT NULL,
+            t_entry DOUBLE PRECISION NOT NULL,
+            t_entry_time TIMESTAMP NOT NULL,
+            s_target DOUBLE PRECISION NOT NULL,
+            s_stoploss DOUBLE PRECISION NOT NULL,
+            t_trade_confirmed_en BOOLEAN,
+            s_instr_token INTEGER,
 
-            instr_token INTEGER,
-            stoploss_per SMALLINT NOT NULL,
-            deep_stoploss_per SMALLINT NOT NULL,
-            delayed_stopLoss_min TIME NOT NULL,
-            stall_detect_period_min TIME NOT NULL,
-            trail_target_en BOOLEAN NOT NULL,
-            position_reversal_en BOOLEAN NOT NULL,
+            r_exit_val DOUBLE PRECISION,
+            r_exit_time TIME,
+            r_exit_reason VARCHAR(100),
 
-            exit_val DOUBLE PRECISION,
-            exit_time TIME,
-            exit_reason VARCHAR(100),
+            r_swing_min DOUBLE PRECISION,
+            r_swing_max DOUBLE PRECISION,
+            r_swing_min_time TIME,
+            r_swing_max_time TIME
 
-            swing_min DOUBLE PRECISION,
-            swing_max DOUBLE PRECISION,
-            swing_min_time TIME,
-            swing_max_time TIME
         );"""
         cur = conn.cursor()
         cur.execute(tradingSignalsTblQuery)
@@ -125,4 +107,23 @@ def createAllTables(conn):
             conn.commit()
             cur.close()
 
+
+    if (db_table_exists(conn, 'algo_strategy_params' )) == False:
+            # create table
+            tradingSignalsTblQuery = """CREATE TABLE algo_strategy_params (
+                strategy_id  VARCHAR(10) UNIQUE NOT NULL,
+                p_engine  VARCHAR(50) NOT NULL,
+                p_target_per SMALLINT NOT NULL,
+                p_candle_size SMALLINT NOT NULL,
+                p_stoploss_per SMALLINT NOT NULL,
+                p_deep_stoploss_per SMALLINT NOT NULL,
+                p_delayed_stopLoss_min TIME NOT NULL,
+                p_stall_detect_period_min TIME NOT NULL,
+                p_trail_target_en BOOLEAN NOT NULL,
+                p_position_reversal_en BOOLEAN NOT NULL                
+            );"""
+            cur = conn.cursor()
+            cur.execute(tradingSignalsTblQuery)
+            conn.commit()
+            cur.close()
 
