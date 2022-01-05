@@ -8,6 +8,7 @@ def execute(algo):
     results = pd.DataFrame()
     if (algo == 'S01_ORB'):
         results = S01_ORB_Force("filteredDayDF", "selectedDate", results)
+        return results
     else:
         return 'No Algo Found'
 

@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 from  App.Strategies import StrategiesCaller
 from App.Engine import EngineCaller
+from App.DB import tsDB
 
 class Item(BaseModel):
     name: str
@@ -12,6 +13,8 @@ class Item(BaseModel):
 
 
 app = FastAPI()
+dbConn = tsDB.dbConnect()
+tsDB.createAllTables(dbConn)
 
 
 @app.get("/tradesignals/")
