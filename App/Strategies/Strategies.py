@@ -14,7 +14,8 @@ def execute(dbConn, algo):
     # print(algoParams[AlgoParam.strategy_id.value])
 
     # 2. Fetch candles
-    cdl = db.fetchCandlesOnDate(dbConn, '', "2022-01-08", "1")
+    selDate = '2022-01-08'
+    cdl = db.fetchCandlesOnDate(dbConn, '', selDate, "1")
     print(cdl)
 
     # cdl = db.fetchCandlesOnDate(dbConn, 'TEST_Signal', "2022-01-08", "1")
@@ -25,7 +26,7 @@ def execute(dbConn, algo):
 
     baseAlgo = algo[:-4]
     if baseAlgo == "S001-ORB":
-        results = S001_ORB(cdl, "selectedDate", algoParams, results)
+        results = S001_ORB(algo, cdl, selDate, algoParams, results)
         return results
     else:
         return "No Algo Found"

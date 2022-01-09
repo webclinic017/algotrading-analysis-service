@@ -17,51 +17,41 @@ import pandas as pd
 # from lib_CANDLES import getTimeCandle
 # from lib_ENCODE import encodeExitCriteria
 
-# Configuration Data
-TARGET_PERCENTAGE = 1.1
+import App.Libraries.lib_ORB as orb
+import App.Libraries.lib_CANDLES as c
+from App.Libraries.lib_AlgoParams import AlgoParam
+
 ENTRY_GAP_DELTA_PERCENTAGE = 0
-ORB_SCAN_CANDLES = 5  # val * 1min candles
-
-STOP_LOSS = "1"
-SL_DELAY = "00Min"  # ('30Min' '0Min' '') < only these 3 are valid entries. Otherwise it breaks!
-DEEP_STOPLOSS = "1"  # In %
-
-STALL_DETECT_PERIOD = "30Min"  # in Minutes
-TRAGET_TRAIL = "1"
-POS_REVERSAL = "1"
-CANDLE_INTERVAL = "5Min"
 
 
-def S001_ORB(filteredDayDF, selectedDate, algoParams, results):
+def S001_ORB(algo, filteredDayDF, selectedDate, algoParams, results):
 
     try:
 
-        results.at[0, "StopLoss"] = STOP_LOSS
-        results.at[0, "DelayedStopLoss"] = SL_DELAY
-        results.at[0, "StallDetectPeriod"] = STALL_DETECT_PERIOD
-        results.at[0, "TrailTarget"] = TRAGET_TRAIL
-        results.at[0, "PositionRevarsal"] = POS_REVERSAL
-
-        results.at[0, "Strategy"] = "ORB-Force"
-        results.at[0, "Csize"] = CANDLE_INTERVAL
+        results.at[0, "Strategy"] = algo
         results.at[0, "Date"] = selectedDate
 
-        orb_low, orb_high, day_low, day_high = getORB(filteredDayDF,
-                                                      ORB_SCAN_CANDLES)
+        orb_low, orb_high, day_low, day_high = orb.getORB(
+            filteredDayDF, algoParams[AlgoParam.candle_size.value])
 
-        cdl_926 = 0  # getTimeCandle(filteredDayDF, 'Close', selectedDate + ' 09:25')
-        cdl_926open = 0  # getTimeCandle(filteredDayDF, 'Open', selectedDate + ' 09:25')
-        cdl_930 = 0  # getTimeCandle(filteredDayDF, 'Close', selectedDate + ' 09:30')
-        # cdl_315 = getTimeCandle(       filteredDayDF, 'Close', selectedDate + ' 15:15')
+        cdl_926 = c.getTimeCandle(filteredDayDF, 'Close',
+                                  selectedDate + ' 09:25')
+        cdl_926open = c.getTimeCandle(filteredDayDF, 'Open',
+                                      selectedDate + ' 09:25')
+        cdl_930 = c.getTimeCandle(filteredDayDF, 'Close',
+                                  selectedDate + ' 09:30')
 
         orbDelta = (abs(orb_high - orb_low) * ENTRY_GAP_DELTA_PERCENTAGE) / 100
 
         if cdl_930 > (orb_high + orbDelta):
             if cdl_930 > cdl_926open:  # Green candle
                 results.at[0, "Signal"] = "Bullish"
-                results.at[0, "Target"] = cdl_930 + (cdl_930 *
-                                                     TARGET_PERCENTAGE / 100)
-                results.at[0, "DeepStopLoss"] = cdl_930 * DEEP_STOPLOSS / 100
+                results.at[0, "Target"] = cdl_930 + (
+                    cdl_930 * algoParams[AlgoParam.target_per.value] / 100)
+
+                results.at[0, "DeepStopLoss"] = cdl_930 * algoParams[
+                    AlgoParam.deep_stoploss_per.value] / 100
+
                 results.at[0, "StopLoss"] = cdl_926open
                 results.at[0, "Entry"] = cdl_930
                 results.at[0, "EntryTime"] = "09:30"
@@ -71,10 +61,11 @@ def S001_ORB(filteredDayDF, selectedDate, algoParams, results):
         elif cdl_930 < (orb_low - orbDelta):
             if cdl_930 < cdl_926open:  # Red candle
                 results.at[0, "Signal"] = "Bearish"
-                results.at[0, "Target"] = cdl_930 - (cdl_930 *
-                                                     TARGET_PERCENTAGE / 100)
+                results.at[0, "Target"] = cdl_930 - (
+                    cdl_930 * algoParams[AlgoParam.target_per.value] / 100)
                 results.at[0, "StopLoss"] = cdl_926open
-                results.at[0, "DeepStopLoss"] = cdl_930 * DEEP_STOPLOSS / 100
+                results.at[0, "DeepStopLoss"] = cdl_930 * algoParams[
+                    AlgoParam.deep_stoploss_per.value] / 100
                 results.at[0, "Entry"] = cdl_930
                 results.at[0, "EntryTime"] = "09:30"
             else:
@@ -84,7 +75,7 @@ def S001_ORB(filteredDayDF, selectedDate, algoParams, results):
             results.at[0, "Signal"] = "NA"
 
     except Exception as e:
-        print("Data Error", selectedDate)
+        # print("Data Error", selectedDate)
         print(e)
         results.at[0, "Signal"] = "Data Error"
         return results
