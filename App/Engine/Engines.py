@@ -2,7 +2,7 @@ from numpy import double
 from App.Engine.E01_Intraday_Trading_Engine import IntraDay_Directional_NakedPosition
 import pandas as pd
 
-def execute(algo):
+def execute(dbConn, algo):
 
     results = pd.DataFrame()
     
