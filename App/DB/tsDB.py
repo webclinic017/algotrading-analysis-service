@@ -48,23 +48,13 @@ def readAlgoParams(conn, cellValue):
 
 
 def fetchCandlesOnDate(conn, symbol, date, candleSize):
-    # read all rows from table
     sql = f"SELECT * FROM candles_{candleSize}min WHERE symbol LIKE '%{symbol}%' AND DATE_TRUNC('day', bucket) = '{date}' ORDER BY bucket DESC"
-    cur = conn.cursor()
-    cur.execute(sql)
-    rows = cur.fetchall()
-    cur.close()
-    return rows
+    return pd.read_sql(sql, conn)
 
 
 def fetchCandlesBetweenTime(conn, symbol, timeFrom, timeTill, candleSize):
-    # read all rows from table
     sql = f"SELECT * FROM candles_{candleSize}min WHERE symbol LIKE '%{symbol}%' AND bucket BETWEEN '{timeFrom}' and '{timeTill}'ORDER BY bucket DESC"
-    cur = conn.cursor()
-    cur.execute(sql)
-    rows = cur.fetchall()
-    cur.close()
-    return rows
+    return pd.read_sql(sql, conn)
 
 
 def createAllTables(conn):
