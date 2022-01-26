@@ -27,6 +27,7 @@ def dbConnect():  # connect to database
 
 def db_table_exists(conn, tablename):
     # thanks to Peter Hansen's answer for this sql
+
     sql = f"select * from information_schema.tables where table_name='{tablename}'"
 
     # return results of sql query from conn as a pandas dataframe
@@ -39,16 +40,14 @@ def db_table_exists(conn, tablename):
 def readAlgoParams(conn, cellValue):
     # read all rows from table
     cur = conn.cursor()
-    cur.execute(
-        f"select * from algotrading_strategy_params where strategy_id = '{cellValue}' "
-    )
+    cur.execute(f"select * from strategies where strategy_id = '{cellValue}' ")
     rows = cur.fetchone()
     cur.close()
     return rows
 
 
 def fetchCandlesOnDate(conn, symbol, date, candleSize):
-    sql = f"SELECT * FROM candles_{candleSize}min WHERE symbol LIKE '%{symbol}%' AND DATE_TRUNC('day', bucket) = '{date}' ORDER BY bucket DESC"
+    sql = f"SELECT * FROM candles_{candleSize}min WHERE symbol LIKE '%{symbol}%' AND DATE_TRUNC('day', candle) = '{date}' ORDER BY candle DESC"
     return pd.read_sql(sql, conn)
 
 
@@ -58,9 +57,9 @@ def fetchCandlesBetweenTime(conn, symbol, timeFrom, timeTill, candleSize):
 
 
 def createAllTables(conn):
-    if (db_table_exists(conn, "algotrading_signals_trading")) == False:
+    if (db_table_exists(conn, "signals_trading")) == False:
         # create table
-        tradingSignalsTblQuery = """CREATE TABLE algotrading_signals_trading (
+        tradingSignalsTblQuery = """CREATE TABLE signals_trading (
             strategy_id  VARCHAR(10) NOT NULL,
 
             s_order_id SERIAL UNIQUE NOT NULL,
@@ -87,9 +86,9 @@ def createAllTables(conn):
         conn.commit()
         cur.close()
 
-    if (db_table_exists(conn, "algotrading_signals_simulation")) == False:
+    if (db_table_exists(conn, "signals_simulation")) == False:
         # create table
-        tradingSignalsTblQuery = """CREATE TABLE algotrading_signals_simulation (
+        tradingSignalsTblQuery = """CREATE TABLE signals_simulation (
             strategy_id  VARCHAR(10) NOT NULL,
             simulation_id INTEGER NOT NULL,
 
@@ -118,9 +117,9 @@ def createAllTables(conn):
         conn.commit()
         cur.close()
 
-    if (db_table_exists(conn, "algotrading_analysis_service_status")) == False:
+    if (db_table_exists(conn, "algotrading_status")) == False:
         # create table
-        tradingSignalsTblQuery = """CREATE TABLE algotrading_analysis_service_status (
+        tradingSignalsTblQuery = """CREATE TABLE algotrading_status (
                 status VARCHAR(50) NOT NULL,
                 processing_strategy_id INTEGER,
                 processing_simulation_id INTEGER,
@@ -131,9 +130,9 @@ def createAllTables(conn):
         conn.commit()
         cur.close()
 
-    if (db_table_exists(conn, "algotrading_strategy_params")) == False:
+    if (db_table_exists(conn, "strategies")) == False:
         # create table
-        tradingSignalsTblQuery = """CREATE TABLE algotrading_strategy_params (
+        tradingSignalsTblQuery = """CREATE TABLE strategies (
                 strategy_id VARCHAR(30) UNIQUE NOT NULL,
                 strategy_en BOOLEAN NOT NULL DEFAULT 'false',
                 p_engine  VARCHAR(50) NOT NULL,

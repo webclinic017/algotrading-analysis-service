@@ -14,8 +14,8 @@ def execute(dbConn, algo):
     # print(algoParams[AlgoParam.strategy_id.value])
 
     # 2. Fetch candles
-    selDate = '2022-01-08'
-    cdl = db.fetchCandlesOnDate(dbConn, '', selDate, "1")
+    selDate = '2022-01-25'
+    cdl = db.fetchCandlesOnDate(dbConn, 'BANKNIFTY', selDate, "5")
     print(cdl)
 
     # cdl = db.fetchCandlesOnDate(dbConn, 'TEST_Signal', "2022-01-08", "1")

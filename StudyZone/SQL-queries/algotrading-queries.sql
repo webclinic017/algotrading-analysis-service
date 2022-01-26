@@ -43,3 +43,6 @@ SELECT add_compression_policy('ticks_data ', INTERVAL '30 days');
 DELETE FROM ticks_data WHERE time < '2011-03-01 01:01:01';
 
 
+select * from public.information_schema.tables;
+
+select table_name from information_schema.tables WHERE table_name = 'zerodha_ticks';
