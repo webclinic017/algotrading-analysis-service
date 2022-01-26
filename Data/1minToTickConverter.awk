@@ -1,12 +1,15 @@
 BEGIN { FS = ","
-print "Symbol,timestamp,last_traded_price," }
+# print "Symbol,timestamp,last_traded_price," }
+print "time,symbol,last_traded_price,buy_demand,sell_demand,trades_till_now,open_interest"
+}
+
 
 {
     #print $0
-    print $1 "," substr($2, 1, 17)"01," $3
-    print $1 "," substr($2, 1, 17)"02," $4
-    print $1 "," substr($2, 1, 17)"03," $5
-    print $1 "," substr($2, 1, 17)"59," $6
+    print substr($2, 1, 17)"01," $1 "," $3 ",0,0,0,0"
+    print substr($2, 1, 17)"02," $1 "," $4 ",0,0,0,0"
+    print substr($2, 1, 17)"03," $1 "," $5 ",0,0,0,0"
+    print substr($2, 1, 17)"59," $1 "," $6 ",0,0,0,0"
     #print "\n\n"
 
 }
@@ -15,3 +18,6 @@ print "Symbol,timestamp,last_traded_price," }
 # Symbol,timestamp,open,high,low,close,volume,
 
 END { }
+
+
+# ❯ gawk -f ./1minToTickConverter.awk candles_1min_t_202201102340.csv > historic.csv
