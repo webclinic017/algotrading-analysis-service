@@ -24,22 +24,27 @@ from App.Libraries.lib_AlgoParams import AlgoParam
 ENTRY_GAP_DELTA_PERCENTAGE = 0
 
 
-def S001_ORB(algo, filteredDayDF, selectedDate, algoParams, results):
+#  algo inputs
+# --------------
+#  algo = "S001-ORB"
+#  df - dataframe (candles size 5 min)
+#  symbol = "BANKNIFTY"
+#  date = "2022-01-25"
+#
+def S001_ORB(algo, df, date, algoParams, results):
 
     try:
 
         results.at[0, "Strategy"] = algo
-        results.at[0, "Date"] = selectedDate
+        results.at[0, "Date"] = date
 
-        orb_low, orb_high, day_low, day_high = orb.getORB(
-            filteredDayDF, algoParams[AlgoParam.candle_size.value])
+        # orb_low, orb_high = orb.getORB(df)
+        orb_low = df.at[date + ' 09:15', 'low'][0]
+        orb_high = df.at[date + ' 09:15', 'high'][0]
 
-        cdl_926 = c.getTimeCandle(filteredDayDF, 'Close',
-                                  selectedDate + ' 09:25')
-        cdl_926open = c.getTimeCandle(filteredDayDF, 'Open',
-                                      selectedDate + ' 09:25')
-        cdl_930 = c.getTimeCandle(filteredDayDF, 'Close',
-                                  selectedDate + ' 09:30')
+        cdl_926 = df.at[date + ' 09:25', 'close'][0]
+        cdl_926open = df.at[date + ' 09:25', 'open'][0]
+        cdl_930 = df.at[date + ' 09:30', 'close'][0]
 
         orbDelta = (abs(orb_high - orb_low) * ENTRY_GAP_DELTA_PERCENTAGE) / 100
 
@@ -75,7 +80,7 @@ def S001_ORB(algo, filteredDayDF, selectedDate, algoParams, results):
             results.at[0, "Signal"] = "NA"
 
     except Exception as e:
-        # print("Data Error", selectedDate)
+        # print("Data Error", date)
         print(e)
         results.at[0, "Signal"] = "Data Error"
         return results

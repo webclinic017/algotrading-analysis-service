@@ -41,9 +41,8 @@ tsDB.createAllTables(dbConn)
 
 
 @app.get("/tradesignals/")
-def read_item(algo: str):
-    ret = Strategies.execute(dbConn, algo)
-    return {"signals": ret}
+def read_item(algo: str, symbol: str, date: str):
+    return Strategies.execute(dbConn, algo, symbol, date)
 
 
 @app.get("/simulation/")

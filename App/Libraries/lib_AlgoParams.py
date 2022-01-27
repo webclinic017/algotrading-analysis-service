@@ -2,7 +2,7 @@ import enum
 
 
 class AlgoParam(enum.Enum):
-    strategy_id = 1
+    strategy_id = 0
     strategy_en = strategy_id + 1
     engine = strategy_en + 1
     trigger_time = engine + 1

@@ -5,7 +5,7 @@ from App.Libraries.lib_AlgoParams import AlgoParam
 import pandas as pd
 
 
-def execute(dbConn, algo):
+def execute(dbConn, algo, symbol, date):
 
     results = pd.DataFrame()
 
@@ -14,8 +14,8 @@ def execute(dbConn, algo):
     # print(algoParams[AlgoParam.strategy_id.value])
 
     # 2. Fetch candles
-    selDate = '2022-01-25'
-    cdl = db.fetchCandlesOnDate(dbConn, 'BANKNIFTY', selDate, "5")
+    cdl = db.fetchCandlesOnDate(dbConn, symbol, date, "5")
+    cdl.set_index('candle', inplace=True)
     print(cdl)
 
     # cdl = db.fetchCandlesOnDate(dbConn, 'TEST_Signal', "2022-01-08", "1")
@@ -26,7 +26,8 @@ def execute(dbConn, algo):
 
     baseAlgo = algo[:-4]
     if baseAlgo == "S001-ORB":
-        results = S001_ORB(algo, cdl, selDate, algoParams, results)
-        return results
+        results = S001_ORB(algo, cdl, date, algoParams, results)
+        print(results)
+        return results.to_json(orient="index")
     else:
         return "No Algo Found"

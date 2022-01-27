@@ -1,5 +1,9 @@
-
-
+-- ##################################################################  view symbol within specific time frame
+select * from ticks_data 
+ WHERE (time between '2022-01-25 09:00:00' and '2022-01-25 09:40:00')
+ and symbol like '%BANKNIFTY%'
+ORDER by time asc;
+ 
 -- ##################################################################  view tick count for each day
 SELECT 
     DATE_TRUNC('day', "time") AS "day", 

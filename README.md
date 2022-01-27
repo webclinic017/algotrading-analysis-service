@@ -7,3 +7,7 @@
         RULE, Version no 3 chars fixed.
         RULE, Base algo = algo minus last 4 characters
         
+
+
+## Invoke trade signal
+http://0.0.0.0:5000/tradesignals/?algo=S001-ORB-001&symbol=BANKNIFTY&date=2022-01-25        
