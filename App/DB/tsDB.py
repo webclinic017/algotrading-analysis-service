@@ -2,6 +2,7 @@ import os
 import json
 from pgcopy.copy import null
 import psycopg2
+import sqlalchemy
 import pandas as pd
 from pandas.io.json import json_normalize
 
@@ -15,14 +16,23 @@ def dbConnect():  # connect to database
     credentials = json.load(f)
     f.close()
 
-    conn = psycopg2.connect(
+    db_url = 'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}'.format(
         database=credentials["DB_NAME"],
         host=credentials["DB_HOST"],
         user=credentials["DB_USER"],
         password=credentials["DB_PASS"],
-        port=credentials["DB_PORT"],
-    )
-    return conn
+        port=credentials["DB_PORT"])
+
+    engine = sqlalchemy.create_engine(db_url)
+
+    # conn = psycopg2.connect(
+    #     database=credentials["DB_NAME"],
+    #     host=credentials["DB_HOST"],
+    #     user=credentials["DB_USER"],
+    #     password=credentials["DB_PASS"],
+    #     port=credentials["DB_PORT"],
+    # )
+    return engine
 
 
 def db_table_exists(conn, tablename):
@@ -38,12 +48,13 @@ def db_table_exists(conn, tablename):
 
 
 def readAlgoParams(conn, cellValue):
-    # read all rows from table
-    cur = conn.cursor()
-    cur.execute(f"select * from strategies where strategy_id = '{cellValue}' ")
-    rows = cur.fetchone()
-    cur.close()
-    return rows
+    sql = f"select * from strategies where strategy_id = '{cellValue}' "
+    return pd.read_sql(sql, conn)
+
+
+def fetchCandlesBetween(conn, symbol, sdatetime, edatetime, candleSize):
+    sql = f"select * FROM candles_{candleSize}min WHERE (candle between '{sdatetime}' and '{edatetime}') and symbol like '${symbol}$' ORDER by candle asc"
+    return pd.read_sql(sql, conn)
 
 
 def fetchCandlesOnDate(conn, symbol, date, candleSize):
@@ -51,9 +62,9 @@ def fetchCandlesOnDate(conn, symbol, date, candleSize):
     return pd.read_sql(sql, conn)
 
 
-def fetchCandlesBetweenTime(conn, symbol, timeFrom, timeTill, candleSize):
-    sql = f"SELECT * FROM candles_{candleSize}min WHERE symbol LIKE '%{symbol}%' AND bucket BETWEEN '{timeFrom}' and '{timeTill}'ORDER BY bucket DESC"
-    return pd.read_sql(sql, conn)
+def saveTradeSignalsToDB(conn, df):
+    print(df)
+    df.to_sql('signals_trading', conn, if_exists='append', index=False)
 
 
 def createAllTables(conn):

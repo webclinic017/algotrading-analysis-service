@@ -35,54 +35,54 @@ def S001_ORB(algo, df, date, algoParams, results):
 
     try:
 
-        results.at[0, "Strategy"] = algo
-        results.at[0, "Date"] = date
+        results.at[0, "strategy_id"] = algo
+        results.at[0, "s_date"] = date
 
         # orb_low, orb_high = orb.getORB(df)
-        orb_low = df.at[date + ' 09:15', 'low'][0]
-        orb_high = df.at[date + ' 09:15', 'high'][0]
+        # print(df.at[date + ' 09:15', 'low'])
+        orb_low = df.at[date + ' 09:15', 'low']
+        orb_high = df.at[date + ' 09:15', 'high']
 
-        cdl_926 = df.at[date + ' 09:25', 'close'][0]
-        cdl_926open = df.at[date + ' 09:25', 'open'][0]
-        cdl_930 = df.at[date + ' 09:30', 'close'][0]
+        cdl_926 = df.at[date + ' 09:25', 'close']
+        cdl_926open = df.at[date + ' 09:25', 'open']
+        cdl_930 = df.at[date + ' 09:30', 'close']
+        results.at[0, "s_instr_token"] = df.at[date + ' 09:15', 'symbol']
 
         orbDelta = (abs(orb_high - orb_low) * ENTRY_GAP_DELTA_PERCENTAGE) / 100
 
         if cdl_930 > (orb_high + orbDelta):
             if cdl_930 > cdl_926open:  # Green candle
-                results.at[0, "Signal"] = "Bullish"
-                results.at[0, "Target"] = cdl_930 + (
+                results.at[0, "s_direction"] = "Bullish"
+                results.at[0, "s_target"] = cdl_930 + (
                     cdl_930 * algoParams[AlgoParam.target_per.value] / 100)
 
-                results.at[0, "DeepStopLoss"] = cdl_930 * algoParams[
-                    AlgoParam.deep_stoploss_per.value] / 100
+                # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams[AlgoParam.deep_stoploss_per.value] / 100
 
-                results.at[0, "StopLoss"] = cdl_926open
-                results.at[0, "Entry"] = cdl_930
-                results.at[0, "EntryTime"] = "09:30"
+                results.at[0, "s_stoploss"] = cdl_926open
+                results.at[0, "t_entry"] = cdl_930
+                results.at[0, "t_entry_time"] = "09:30"
             else:
-                results.at[0, "Signal"] = "Failed Bullish"
+                results.at[0, "s_direction"] = "Failed Bullish"
 
         elif cdl_930 < (orb_low - orbDelta):
             if cdl_930 < cdl_926open:  # Red candle
-                results.at[0, "Signal"] = "Bearish"
-                results.at[0, "Target"] = cdl_930 - (
+                results.at[0, "s_direction"] = "Bearish"
+                results.at[0, "s_target"] = cdl_930 - (
                     cdl_930 * algoParams[AlgoParam.target_per.value] / 100)
-                results.at[0, "StopLoss"] = cdl_926open
-                results.at[0, "DeepStopLoss"] = cdl_930 * algoParams[
-                    AlgoParam.deep_stoploss_per.value] / 100
-                results.at[0, "Entry"] = cdl_930
-                results.at[0, "EntryTime"] = "09:30"
+                results.at[0, "s_stoploss"] = cdl_926open
+                # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams[AlgoParam.deep_stoploss_per.value] / 100
+                results.at[0, "t_entry"] = cdl_930
+                results.at[0, "t_entry_time"] = "09:30"
             else:
-                results.at[0, "Signal"] = "Failed Bearish"
+                results.at[0, "s_direction"] = "Failed Bearish"
 
         else:
-            results.at[0, "Signal"] = "NA"
+            results.at[0, "s_direction"] = "NA"
 
     except Exception as e:
         # print("Data Error", date)
-        print(e)
-        results.at[0, "Signal"] = "Data Error"
+        # print(e)
+        results.at[0, "s_direction"] = "Data Error"
         return results
 
     else:
