@@ -19,7 +19,6 @@ import pandas as pd
 
 import App.Libraries.lib_ORB as orb
 import App.Libraries.lib_CANDLES as c
-from App.Libraries.lib_AlgoParams import AlgoParam
 
 ENTRY_GAP_DELTA_PERCENTAGE = 0
 
@@ -54,9 +53,9 @@ def S001_ORB(algo, df, date, algoParams, results):
             if cdl_930 > cdl_926open:  # Green candle
                 results.at[0, "s_direction"] = "Bullish"
                 results.at[0, "s_target"] = cdl_930 + (
-                    cdl_930 * algoParams[AlgoParam.target_per.value] / 100)
+                    cdl_930 * algoParams["p_target_per"] / 100)
 
-                # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams[AlgoParam.deep_stoploss_per.value] / 100
+                # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams["p_deep_stoploss_per"] / 100
 
                 results.at[0, "s_stoploss"] = cdl_926open
                 results.at[0, "t_entry"] = cdl_930
@@ -68,9 +67,9 @@ def S001_ORB(algo, df, date, algoParams, results):
             if cdl_930 < cdl_926open:  # Red candle
                 results.at[0, "s_direction"] = "Bearish"
                 results.at[0, "s_target"] = cdl_930 - (
-                    cdl_930 * algoParams[AlgoParam.target_per.value] / 100)
+                    cdl_930 * algoParams["p_target_per"] / 100)
                 results.at[0, "s_stoploss"] = cdl_926open
-                # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams[AlgoParam.deep_stoploss_per.value] / 100
+                # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams["p_deep_stoploss_per"] / 100
                 results.at[0, "t_entry"] = cdl_930
                 results.at[0, "t_entry_time"] = "09:30"
             else:

@@ -47,18 +47,20 @@ def db_table_exists(conn, tablename):
     return bool(len(results_df))
 
 
-def readAlgoParams(conn, cellValue):
+def readAlgoParamsJson(conn, cellValue):
     sql = f"select * from strategies where strategy_id = '{cellValue}' "
-    return pd.read_sql(sql, conn)
+    df = pd.read_sql(sql, conn)
+    df.to_json(orient="records")
+    return df
 
 
 def fetchCandlesBetween(conn, symbol, sdatetime, edatetime, candleSize):
-    sql = f"select * FROM candles_{candleSize}min WHERE (candle between '{sdatetime}' and '{edatetime}') and symbol like '${symbol}$' ORDER by candle asc"
+    sql = f"select * FROM candles_{candleSize}min WHERE (candle between '{sdatetime}' and '{edatetime}') and symbol like '%%{symbol}%%' ORDER by candle asc"
     return pd.read_sql(sql, conn)
 
 
 def fetchCandlesOnDate(conn, symbol, date, candleSize):
-    sql = f"SELECT * FROM candles_{candleSize}min WHERE symbol LIKE '%{symbol}%' AND DATE_TRUNC('day', candle) = '{date}' ORDER BY candle DESC"
+    sql = f"SELECT * FROM candles_{candleSize}min WHERE symbol LIKE '%%{symbol}%%' AND DATE_TRUNC('day', candle) = '{date}' ORDER BY candle DESC"
     return pd.read_sql(sql, conn)
 
 

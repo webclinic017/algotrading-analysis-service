@@ -13,12 +13,13 @@ def execute(dbConn, algo, symbol, date):
     results = pd.DataFrame(columns=res.trade_signal_header_list)
 
     # 1. Fetch params for algo
-    algoParams = db.readAlgoParams(dbConn, algo)
-    # print(algoParams[AlgoParam.strategy_id.value])
+    algoParams = db.readAlgoParamsJson(dbConn, algo)
+    # print(algoParams["strategy_id"])
 
     # 2. Fetch candles
     cdl = db.fetchCandlesBetween(dbConn, symbol, date + " 09:00",
                                  date + " 09:30", "5")
+    print(cdl)
     sym = cdl.symbol.unique()
 
     # 3. Run algo for each symbol
@@ -32,9 +33,7 @@ def execute(dbConn, algo, symbol, date):
             # print(results)
             if (results.at[0, "s_direction"] == "Bullish") or \
                 (results.at[0, "s_direction"] == "Bearish"):
-                summary = summary.append(results,
-                                         ignore_index=True,
-                                         sort=False)
+                summary = summary.append(results)
 
         db.saveTradeSignalsToDB(dbConn, summary)
         summary.to_csv('./ORB-Force.csv', index=False)
