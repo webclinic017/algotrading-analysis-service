@@ -18,26 +18,10 @@ app = FastAPI()
 dbConn = tsDB.dbConnect()
 tsDB.createAllTables(dbConn)
 
-# header_list = ['symbol', 'timestamp',\
-#                    'Open', 'High', 'Low', 'Close', \
-#                    'Null1', 'Null2', 'Null3', 'Null4']
 
-# BNFs = pd.read_csv(
-#     '/home/parag/devArea/algotrading-analysis-service/App/combined_bnf.csv',
-#     header=None,
-#     sep=',',
-#     names=header_list)
-
-# BNFs = BNFs.drop(columns=['Null1', 'Null2', 'Null3', 'Null4'])
-
-# print(BNFs.head())
-# print(BNFs.tail())
-
-# print(BNFs.index.max() - BNFs.index.min())
-
-# BNFs.to_csv(
-#     '/home/parag/devArea/algotrading-analysis-service/App/combined_bnf_new.csv',
-#     index=False)
+@app.get("/")
+def read_root():
+    return {"Hello": "Welcome to algotrading-analysis-service v0.1"}
 
 
 @app.get("/tradesignals/")
