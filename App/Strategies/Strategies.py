@@ -19,7 +19,7 @@ def execute(dbConn, algo, symbol, date):
     # 2. Fetch candles
     cdl = db.fetchCandlesBetween(dbConn, symbol, date + " 09:00",
                                  date + " 09:30", "5")
-    print(cdl)
+    # print(cdl)
     sym = cdl.symbol.unique()
 
     # 3. Run algo for each symbol
@@ -36,8 +36,8 @@ def execute(dbConn, algo, symbol, date):
                 summary = summary.append(results)
 
         db.saveTradeSignalsToDB(dbConn, summary)
-        summary.to_csv('./ORB-Force.csv', index=False)
-        summary.to_json('./ORB-Force.json', orient="records")
+        # summary.to_csv('./ORB-Force.csv', index=False)
+        # summary.to_json('./ORB-Force.json', orient="records")
         json = summary.to_json(orient="records")
 
         return json

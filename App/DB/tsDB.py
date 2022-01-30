@@ -5,6 +5,7 @@ import psycopg2
 import sqlalchemy
 import pandas as pd
 from pandas.io.json import json_normalize
+import App.Libraries.lib_results as res
 
 
 def dbConnect():  # connect to database
@@ -25,13 +26,6 @@ def dbConnect():  # connect to database
 
     engine = sqlalchemy.create_engine(db_url)
 
-    # conn = psycopg2.connect(
-    #     database=credentials["DB_NAME"],
-    #     host=credentials["DB_HOST"],
-    #     user=credentials["DB_USER"],
-    #     password=credentials["DB_PASS"],
-    #     port=credentials["DB_PORT"],
-    # )
     return engine
 
 
@@ -50,7 +44,7 @@ def db_table_exists(conn, tablename):
 def readAlgoParamsJson(conn, cellValue):
     sql = f"select * from strategies where strategy_id = '{cellValue}' "
     df = pd.read_sql(sql, conn)
-    df.to_json(orient="records")
+    df.to_dict('records')
     return df
 
 
@@ -65,7 +59,6 @@ def fetchCandlesOnDate(conn, symbol, date, candleSize):
 
 
 def saveTradeSignalsToDB(conn, df):
-    print(df)
     df.to_sql('signals_trading', conn, if_exists='append', index=False)
 
 
@@ -73,17 +66,17 @@ def createAllTables(conn):
     if (db_table_exists(conn, "signals_trading")) == False:
         # create table
         tradingSignalsTblQuery = """CREATE TABLE signals_trading (
-            strategy_id  VARCHAR(10) NOT NULL,
+            s_order_id SERIAL PRIMARY KEY NOT NULL,
 
-            s_order_id SERIAL UNIQUE NOT NULL,
+            strategy_id  VARCHAR(50) NOT NULL,
             s_date DATE NOT NULL,
             s_direction VARCHAR(50) NOT NULL,
             t_entry DOUBLE PRECISION NOT NULL,
-            t_entry_time TIMESTAMP NOT NULL,
+            t_entry_time TIME NOT NULL,
             s_target DOUBLE PRECISION NOT NULL,
             s_stoploss DOUBLE PRECISION NOT NULL,
             t_trade_confirmed_en BOOLEAN,
-            s_instr_token INTEGER,
+            s_instr_token VARCHAR(200),
 
             r_exit_val DOUBLE PRECISION,
             r_exit_time TIME,
@@ -94,26 +87,23 @@ def createAllTables(conn):
             r_swing_min_time TIME,
             r_swing_max_time TIME
         );"""
-        cur = conn.cursor()
-        cur.execute(tradingSignalsTblQuery)
-        conn.commit()
-        cur.close()
+        conn.execute(tradingSignalsTblQuery)
 
     if (db_table_exists(conn, "signals_simulation")) == False:
         # create table
         tradingSignalsTblQuery = """CREATE TABLE signals_simulation (
-            strategy_id  VARCHAR(10) NOT NULL,
-            simulation_id INTEGER NOT NULL,
-
-            s_order_id SERIAL UNIQUE NOT NULL,
+            s_order_id SERIAL PRIMARY KEY NOT NULL,
+            strategy_id  VARCHAR(50) NOT NULL,
+            simulation_id INTEGER,
+            
             s_date DATE NOT NULL,
             s_direction VARCHAR(50) NOT NULL,
             t_entry DOUBLE PRECISION NOT NULL,
-            t_entry_time TIMESTAMP NOT NULL,
+            t_entry_time TIME NOT NULL,
             s_target DOUBLE PRECISION NOT NULL,
             s_stoploss DOUBLE PRECISION NOT NULL,
             t_trade_confirmed_en BOOLEAN,
-            s_instr_token INTEGER,
+            s_instr_token VARCHAR(200),
 
             r_exit_val DOUBLE PRECISION,
             r_exit_time TIME,
@@ -125,10 +115,7 @@ def createAllTables(conn):
             r_swing_max_time TIME
 
         );"""
-        cur = conn.cursor()
-        cur.execute(tradingSignalsTblQuery)
-        conn.commit()
-        cur.close()
+        conn.execute(tradingSignalsTblQuery)
 
     if (db_table_exists(conn, "algotrading_status")) == False:
         # create table
@@ -138,10 +125,7 @@ def createAllTables(conn):
                 processing_simulation_id INTEGER,
                 processing_percentage SMALLINT
             );"""
-        cur = conn.cursor()
-        cur.execute(tradingSignalsTblQuery)
-        conn.commit()
-        cur.close()
+        conn.execute(tradingSignalsTblQuery)
 
     if (db_table_exists(conn, "strategies")) == False:
         # create table
@@ -160,7 +144,4 @@ def createAllTables(conn):
                 p_trail_target_en BOOLEAN NOT NULL,
                 p_position_reversal_en BOOLEAN NOT NULL                
             );"""
-        cur = conn.cursor()
-        cur.execute(tradingSignalsTblQuery)
-        conn.commit()
-        cur.close()
+        conn.execute(tradingSignalsTblQuery)
