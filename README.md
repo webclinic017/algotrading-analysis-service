@@ -13,6 +13,9 @@
 http://0.0.0.0:5000/tradesignals/?algo=S001-ORB-001&symbol=BANKNIFTY&date=2022-01-25        
 
 
+## Dependencies
+pipreqs
+
 ## Build DOCKER Image
 DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-analysis-service:latest .
 

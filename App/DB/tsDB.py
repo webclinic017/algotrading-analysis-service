@@ -4,6 +4,7 @@ from pgcopy.copy import null
 import psycopg2
 import sqlalchemy
 import pandas as pd
+from os.path import exists
 from pandas.io.json import json_normalize
 import App.Libraries.lib_results as res
 
@@ -13,19 +14,26 @@ def dbConnect():  # connect to database
     fileDir = os.path.dirname(os.path.realpath(__file__))
     credentials_file = os.path.join(fileDir, "./../../credentials.json")
 
-    f = open(credentials_file, "r")
-    credentials = json.load(f)
-    f.close()
+    if exists(credentials_file):
+        f = open(credentials_file, "r")
+        credentials = json.load(f)
+        f.close()
+        db_url = 'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}'.format(
+            database=credentials["DB_NAME"],
+            host=credentials["DB_HOST"],
+            user=credentials["DB_USER"],
+            password=credentials["DB_PASS"],
+            port=credentials["DB_PORT"])
 
-    db_url = 'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}'.format(
-        database=credentials["DB_NAME"],
-        host=credentials["DB_HOST"],
-        user=credentials["DB_USER"],
-        password=credentials["DB_PASS"],
-        port=credentials["DB_PORT"])
+    else:
+        db_url = 'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}'.format(
+            database=os.getenv('DB_NAME'),
+            host=os.getenv('DB_HOST'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASS'),
+            port=os.getenv('DB_PORT'))
 
     engine = sqlalchemy.create_engine(db_url)
-
     return engine
 
 
