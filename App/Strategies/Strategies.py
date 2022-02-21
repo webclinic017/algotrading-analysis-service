@@ -5,6 +5,7 @@ import App.DB.tsDB as db
 from App.Libraries.lib_AlgoParams import AlgoParam
 import App.Libraries.lib_results as res
 import pandas as pd
+import json
 
 
 def execute(dbConn, algo, symbol, date):
@@ -35,11 +36,10 @@ def execute(dbConn, algo, symbol, date):
                 (results.at[0, "s_direction"] == "Bearish"):
                 summary = summary.append(results)
 
-        db.saveTradeSignalsToDB(dbConn, summary)
-        # summary.to_csv('./ORB-Force.csv', index=False)
-        # summary.to_json('./ORB-Force.json', orient="records")
-        json = summary.to_json(orient="records")
+        # db.saveTradeSignalsToDB(dbConn, summary)
+        json_str = summary.to_json(orient="records")
+        parsed = json.loads(json_str)
 
-        return json
+        return parsed
     else:
         return "No Algo Found"

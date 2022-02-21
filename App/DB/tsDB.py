@@ -140,6 +140,7 @@ def createAllTables(conn):
         tradingSignalsTblQuery = """CREATE TABLE strategies (
                 strategy_id VARCHAR(30) UNIQUE NOT NULL,
                 strategy_en BOOLEAN NOT NULL DEFAULT 'false',
+                instrument_enabled TEXT,
                 p_engine  VARCHAR(50) NOT NULL,
                 p_trigger_time TIME NOT NULL,
                 p_trigger_days VARCHAR(50) NOT NULL,
