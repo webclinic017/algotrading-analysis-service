@@ -25,8 +25,8 @@ def read_root():
 
 
 @app.get("/tradesignals/")
-def read_item(algo: str, symbol: str, date: str):
-    return Strategies.execute(dbConn, algo, symbol, date)
+def read_item(multisymbol: bool, algo: str, symbol: str, date: str):
+    return Strategies.execute(dbConn, multisymbol, algo, symbol, date)
 
 
 @app.get("/simulation/")

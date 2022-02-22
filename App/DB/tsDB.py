@@ -56,8 +56,15 @@ def readAlgoParamsJson(conn, cellValue):
     return df
 
 
-def fetchCandlesBetween(conn, symbol, sdatetime, edatetime, candleSize):
+def fetchCandlesBetweenMultiSymbol(conn, symbol, sdatetime, edatetime,
+                                   candleSize):
     sql = f"select * FROM candles_{candleSize}min WHERE (candle between '{sdatetime}' and '{edatetime}') and symbol like '%%{symbol}%%' ORDER by candle asc"
+    return pd.read_sql(sql, conn)
+
+
+def fetchCandlesBetweenSingleSymbol(conn, symbol, sdatetime, edatetime,
+                                    candleSize):
+    sql = f"select * FROM candles_{candleSize}min WHERE (candle between '{sdatetime}' and '{edatetime}') and symbol like '{symbol}' ORDER by candle asc"
     return pd.read_sql(sql, conn)
 
 

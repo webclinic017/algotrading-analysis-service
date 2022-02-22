@@ -8,7 +8,7 @@ import pandas as pd
 import json
 
 
-def execute(dbConn, algo, symbol, date):
+def execute(dbConn, multisymbol, algo, symbol, date):
 
     summary = pd.DataFrame(columns=res.trade_signal_header_list)
     results = pd.DataFrame(columns=res.trade_signal_header_list)
@@ -18,8 +18,14 @@ def execute(dbConn, algo, symbol, date):
     # print(algoParams["strategy_id"])
 
     # 2. Fetch candles
-    cdl = db.fetchCandlesBetween(dbConn, symbol, date + " 09:00",
-                                 date + " 09:30", "5")
+    if (multisymbol == True):
+        cdl = db.fetchCandlesBetweenMultiSymbol(dbConn, symbol,
+                                                date + " 09:00",
+                                                date + " 09:30", "5")
+    else:
+        cdl = db.fetchCandlesBetweenSingleSymbol(dbConn, symbol,
+                                                 date + " 09:00",
+                                                 date + " 09:30", "5")
     # print(cdl)
     sym = cdl.symbol.unique()
 
