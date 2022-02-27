@@ -11,7 +11,12 @@
 # Subscription services - Stall/Direction from position
 # ----------------------------------------------------------------
 
+from sqlite3 import Timestamp
 import pandas as pd
+import datetime
+from dateutil import parser
+from pytz import timezone
+from tzlocal import get_localzone
 
 # from lib_ORB import getORB
 # from lib_CANDLES import getTimeCandle
@@ -34,8 +39,30 @@ def S001_ORB(algo, df, date, algoParams, results):
 
     try:
 
+        # Convert to local time zone
+
+        # d = "2019-12-25T23:59:59+00:00"
+        # print(datetime.strptime(d, "%Y-%m-%dT%H:%M:%S%z"))
+
+        import pytz, datetime
+
+        latz = pytz.timezone("Asia/Kolkata")
+        print(latz)
+
+        dt = datetime.datetime.now(get_localzone())
+        dt2 = datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute,
+                                dt.second, 0, latz)
+        timeStamp = dt2.isoformat()
+
+        # ct = datetime.datetime.now()
+        # now_local = ct.astimezone(get_localzone())
+        # timeStamp = now_local.strftime("%Y-%m-%dT%H:%M:%S%z")
+        # timeStamp = ct.isoformat()
+        # x = parser.parse(timeStamp)
+        # timeStamp = "2022-02-27T18:00:32+05:30"  -- working format (required for golang parsing)
+
         results.at[0, "strategy_id"] = algo
-        results.at[0, "s_date"] = date
+        results.at[0, "s_date"] = timeStamp
 
         # orb_low, orb_high = orb.getORB(df)
         # print(df.at[date + ' 09:15', 'low'])
@@ -58,7 +85,7 @@ def S001_ORB(algo, df, date, algoParams, results):
                 results.at[0, "s_target"] = calVal
                 results.at[0, "s_stoploss"] = cdl_926open
                 results.at[0, "t_entry"] = cdl_930
-                results.at[0, "t_entry_time"] = "09:30"
+                results.at[0, "t_entry_time"] = timeStamp
             else:
                 results.at[0, "s_direction"] = "Failed Bullish"
 
@@ -70,7 +97,7 @@ def S001_ORB(algo, df, date, algoParams, results):
                 results.at[0, "s_stoploss"] = cdl_926open
                 # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams["p_deep_stoploss_per"] / 100
                 results.at[0, "t_entry"] = cdl_930
-                results.at[0, "t_entry_time"] = "09:30"
+                results.at[0, "t_entry_time"] = timeStamp
             else:
                 results.at[0, "s_direction"] = "Failed Bearish"
 
@@ -79,7 +106,7 @@ def S001_ORB(algo, df, date, algoParams, results):
 
     except Exception as e:
         # print("Data Error", date)
-        # print(e)
+        print(e)
         results.at[0, "s_direction"] = "Data Error"
         return results
 

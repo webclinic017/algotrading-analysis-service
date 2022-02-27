@@ -83,19 +83,19 @@ def createAllTables(conn):
         tradingSignalsTblQuery = """CREATE TABLE signals_trading (
             s_order_id SERIAL PRIMARY KEY NOT NULL,
 
-            strategy_id  VARCHAR(50) NOT NULL,
+            strategy_id  VARCHAR(100) NOT NULL,
             s_date DATE NOT NULL,
             s_direction VARCHAR(50) NOT NULL,
-            t_entry DOUBLE PRECISION NOT NULL,
-            t_entry_time TIME NOT NULL,
+            t_entry DOUBLE PRECISION,
+            t_entry_time TIME ,
             s_target DOUBLE PRECISION NOT NULL,
             s_stoploss DOUBLE PRECISION NOT NULL,
             t_trade_confirmed_en BOOLEAN,
-            s_instr_token VARCHAR(200),
+            s_instr_token TEXT NOT NULL,
 
             r_exit_val DOUBLE PRECISION,
             r_exit_time TIME,
-            r_exit_reason VARCHAR(100),
+            r_exit_reason TEXT,
 
             r_swing_min DOUBLE PRECISION,
             r_swing_max DOUBLE PRECISION,
