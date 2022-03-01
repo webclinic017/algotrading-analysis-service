@@ -61,8 +61,8 @@ def S001_ORB(algo, df, date, algoParams, results):
         # x = parser.parse(timeStamp)
         # timeStamp = "2022-02-27T18:00:32+05:30"  -- working format (required for golang parsing)
 
-        results.at[0, "strategy_id"] = algo
-        results.at[0, "s_date"] = timeStamp
+        results.at[0, "strategy"] = algo
+        results.at[0, "date"] = timeStamp
 
         # orb_low, orb_high = orb.getORB(df)
         # print(df.at[date + ' 09:15', 'low'])
@@ -72,42 +72,42 @@ def S001_ORB(algo, df, date, algoParams, results):
         cdl_926 = df.at[date + ' 09:25', 'close']
         cdl_926open = df.at[date + ' 09:25', 'open']
         cdl_930 = df.at[date + ' 09:30', 'close']
-        results.at[0, "s_instr_token"] = df.at[date + ' 09:15', 'symbol']
+        results.at[0, "instr"] = df.at[date + ' 09:15', 'symbol']
 
         orbDelta = (abs(orb_high - orb_low) * ENTRY_GAP_DELTA_PERCENTAGE) / 100
 
         if cdl_930 > (orb_high + orbDelta):
             if cdl_930 > cdl_926open:  # Green candle
-                results.at[0, "s_direction"] = "Bullish"
+                results.at[0, "dir"] = "Bullish"
                 calVal = cdl_930 + (
                     (cdl_930 * algoParams["p_target_per"][0]) / 100)
                 # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams["p_deep_stoploss_per"] / 100
-                results.at[0, "s_target"] = calVal
-                results.at[0, "s_stoploss"] = cdl_926open
-                results.at[0, "t_entry"] = cdl_930
-                results.at[0, "t_entry_time"] = timeStamp
+                results.at[0, "target"] = calVal
+                results.at[0, "stoploss"] = cdl_926open
+                results.at[0, "entry"] = cdl_930
+                results.at[0, "entry_time"] = timeStamp
             else:
-                results.at[0, "s_direction"] = "Failed Bullish"
+                results.at[0, "dir"] = "Failed Bullish"
 
         elif cdl_930 < (orb_low - orbDelta):
             if cdl_930 < cdl_926open:  # Red candle
-                results.at[0, "s_direction"] = "Bearish"
-                results.at[0, "s_target"] = cdl_930 - (
+                results.at[0, "dir"] = "Bearish"
+                results.at[0, "target"] = cdl_930 - (
                     (cdl_930 * algoParams["p_target_per"][0]) / 100)
-                results.at[0, "s_stoploss"] = cdl_926open
+                results.at[0, "stoploss"] = cdl_926open
                 # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams["p_deep_stoploss_per"] / 100
-                results.at[0, "t_entry"] = cdl_930
-                results.at[0, "t_entry_time"] = timeStamp
+                results.at[0, "entry"] = cdl_930
+                results.at[0, "entry_time"] = timeStamp
             else:
-                results.at[0, "s_direction"] = "Failed Bearish"
+                results.at[0, "dir"] = "Failed Bearish"
 
         else:
-            results.at[0, "s_direction"] = "NA"
+            results.at[0, "dir"] = "NA"
 
     except Exception as e:
         # print("Data Error", date)
         print(e)
-        results.at[0, "s_direction"] = "Data Error"
+        results.at[0, "dir"] = "Data Error"
         return results
 
     else:

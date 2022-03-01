@@ -38,8 +38,8 @@ def execute(dbConn, multisymbol, algo, symbol, date):
             rslt_df.set_index('candle', inplace=True)
             S001_ORB(algo, rslt_df, date, algoParams, results)
             # print(results)
-            if (results.at[0, "s_direction"] == "Bullish") or \
-                (results.at[0, "s_direction"] == "Bearish"):
+            if (results.at[0, "dir"] == "Bullish") or \
+                (results.at[0, "dir"] == "Bearish"):
                 summary = summary.append(results)
 
         # db.saveTradeSignalsToDB(dbConn, summary)

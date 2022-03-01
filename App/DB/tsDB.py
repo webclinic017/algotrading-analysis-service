@@ -81,26 +81,24 @@ def createAllTables(conn):
     if (db_table_exists(conn, "signals_trading")) == False:
         # create table
         tradingSignalsTblQuery = """CREATE TABLE signals_trading (
-            s_order_id SERIAL PRIMARY KEY NOT NULL,
-
-            strategy_id  VARCHAR(100) NOT NULL,
-            s_date DATE NOT NULL,
-            s_direction VARCHAR(50) NOT NULL,
-            t_entry DOUBLE PRECISION,
-            t_entry_time TIME ,
-            s_target DOUBLE PRECISION NOT NULL,
-            s_stoploss DOUBLE PRECISION NOT NULL,
-            t_trade_confirmed_en BOOLEAN,
-            s_instr_token TEXT NOT NULL,
-
-            r_exit_val DOUBLE PRECISION,
-            r_exit_time TIME,
-            r_exit_reason TEXT,
-
-            r_swing_min DOUBLE PRECISION,
-            r_swing_max DOUBLE PRECISION,
-            r_swing_min_time TIME,
-            r_swing_max_time TIME
+            id SERIAL PRIMARY KEY NOT NULL,
+            date DATE NOT NULL,
+            instr TEXT NOT NULL,
+            strategy  VARCHAR(100) NOT NULL,
+            dir VARCHAR(50) NOT NULL,
+            entry DOUBLE PRECISION DEFAULT 0.0,
+            entry_time TIME DEFAULT '00:00:00',
+            target DOUBLE PRECISION NOT NULL,
+            stoploss DOUBLE PRECISION NOT NULL,
+            trade_id INTEGER DEFAULT 0,
+            exit_val DOUBLE PRECISION DEFAULT 0.0,
+            exit_time TIME DEFAULT '00:00:00',
+            exit_reason TEXT  DEFAULT 'NA',
+            swing_min DOUBLE PRECISION DEFAULT 0.0,
+            swing_max DOUBLE PRECISION DEFAULT 0.0,
+            swing_min_time TIME DEFAULT '00:00:00',
+            swing_max_time TIME DEFAULT '00:00:00'
+            
         );"""
         conn.execute(tradingSignalsTblQuery)
 
