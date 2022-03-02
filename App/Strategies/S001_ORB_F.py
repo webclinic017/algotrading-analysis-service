@@ -80,8 +80,8 @@ def S001_ORB(algo, df, date, algoParams, results):
             if cdl_930 > cdl_926open:  # Green candle
                 results.at[0, "dir"] = "Bullish"
                 calVal = cdl_930 + (
-                    (cdl_930 * algoParams["p_target_per"][0]) / 100)
-                # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams["p_deep_stoploss_per"] / 100
+                    (cdl_930 * algoParams["percentages.target"][0]) / 100)
+                # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams["percentages.deepsl"] / 100
                 results.at[0, "target"] = calVal
                 results.at[0, "stoploss"] = cdl_926open
                 results.at[0, "entry"] = cdl_930
@@ -93,9 +93,9 @@ def S001_ORB(algo, df, date, algoParams, results):
             if cdl_930 < cdl_926open:  # Red candle
                 results.at[0, "dir"] = "Bearish"
                 results.at[0, "target"] = cdl_930 - (
-                    (cdl_930 * algoParams["p_target_per"][0]) / 100)
+                    (cdl_930 * algoParams["percentages.target"][0]) / 100)
                 results.at[0, "stoploss"] = cdl_926open
-                # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams["p_deep_stoploss_per"] / 100
+                # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams["percentages.deepsl"] / 100
                 results.at[0, "entry"] = cdl_930
                 results.at[0, "entry_time"] = timeStamp
             else:
@@ -112,3 +112,19 @@ def S001_ORB(algo, df, date, algoParams, results):
 
     else:
         return results
+
+    #   <th>strategy</th>
+    #   <th>enabled</th>
+    #   <th>engine</th>
+    #   <th>trigger_time</th>
+    #   <th>trigger_days</th>
+    #   <th>cdl_size</th>
+    #   <th>instruments</th>
+    #   <th>controls</th>
+    #   <th>percentages.target</th>
+    #   <th>percentages.sl</th>
+    #   <th>percentages.deepsl</th>
+    #   <th>target-controls.trail_target_en</th>
+    #   <th>target-controls.position_reversal_en</th>
+    #   <th>target-controls.delayed_stoploss_min</th>
+    #   <th>target-controls.stall_detect_period_min</th>

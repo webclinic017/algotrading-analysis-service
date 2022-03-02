@@ -15,7 +15,6 @@ def execute(dbConn, multisymbol, algo, symbol, date):
 
     # 1. Fetch params for algo
     algoParams = db.readAlgoParamsJson(dbConn, algo)
-    # print(algoParams["strategy_id"])
 
     # 2. Fetch candles
     if (multisymbol == True):

@@ -23,7 +23,7 @@ tsDB.createAllTables(dbConn)
 def read_root():
     return {
         "Hello":
-        "Welcome to algotrading-analysis-service v0.1.1 Rel Date: 25-Feb-2022"
+        "Welcome to algotrading-analysis-service v0.1.2 Rel Date: 2-Mar-2022"
     }
 
 

@@ -50,10 +50,12 @@ def db_table_exists(conn, tablename):
 
 
 def readAlgoParamsJson(conn, cellValue):
-    sql = f"select * from strategies where strategy_id = '{cellValue}' "
+    sql = f"select * from strategies where strategy = '{cellValue}' "
     df = pd.read_sql(sql, conn)
-    df.to_dict('records')
-    return df
+    df2 = json_normalize(df.iloc[0]['controls'])
+    df_merged = pd.concat([df, df2], axis=1)
+    df_merged.to_dict('records')
+    return df_merged
 
 
 def fetchCandlesBetweenMultiSymbol(conn, symbol, sdatetime, edatetime,
@@ -80,7 +82,7 @@ def saveTradeSignalsToDB(conn, df):
 def createAllTables(conn):
     if (db_table_exists(conn, "signals_trading")) == False:
         # create table
-        tradingSignalsTblQuery = """CREATE TABLE signals_trading (
+        sqlQuery = """CREATE TABLE signals_trading (
             id SERIAL PRIMARY KEY NOT NULL,
             date DATE NOT NULL,
             instr TEXT NOT NULL,
@@ -100,11 +102,11 @@ def createAllTables(conn):
             swing_max_time TIME DEFAULT '00:00:00'
             
         );"""
-        conn.execute(tradingSignalsTblQuery)
+        conn.execute(sqlQuery)
 
     if (db_table_exists(conn, "signals_simulation")) == False:
         # create table
-        tradingSignalsTblQuery = """CREATE TABLE signals_simulation (
+        sqlQuery = """CREATE TABLE signals_simulation (
             s_order_id SERIAL PRIMARY KEY NOT NULL,
             strategy_id  VARCHAR(50) NOT NULL,
             simulation_id INTEGER,
@@ -128,34 +130,18 @@ def createAllTables(conn):
             r_swing_max_time TIME
 
         );"""
-        conn.execute(tradingSignalsTblQuery)
-
-    if (db_table_exists(conn, "algotrading_status")) == False:
-        # create table
-        tradingSignalsTblQuery = """CREATE TABLE algotrading_status (
-                status VARCHAR(50) NOT NULL,
-                processing_strategy_id INTEGER,
-                processing_simulation_id INTEGER,
-                processing_percentage SMALLINT
-            );"""
-        conn.execute(tradingSignalsTblQuery)
+        conn.execute(sqlQuery)
 
     if (db_table_exists(conn, "strategies")) == False:
         # create table
-        tradingSignalsTblQuery = """CREATE TABLE strategies (
-                strategy_id VARCHAR(30) UNIQUE NOT NULL,
-                strategy_en BOOLEAN NOT NULL DEFAULT 'false',
-                instrument_enabled TEXT,
-                p_engine  VARCHAR(50) NOT NULL,
-                p_trigger_time TIME NOT NULL,
-                p_trigger_days VARCHAR(50) NOT NULL,
-                p_target_per SMALLINT NOT NULL,
-                p_candle_size SMALLINT NOT NULL,
-                p_stoploss_per SMALLINT NOT NULL,
-                p_deep_stoploss_per SMALLINT NOT NULL,
-                p_delayed_stopLoss_min TIME NOT NULL,
-                p_stall_detect_period_min TIME NOT NULL,
-                p_trail_target_en BOOLEAN NOT NULL,
-                p_position_reversal_en BOOLEAN NOT NULL                
+        sqlQuery = """CREATE TABLE strategies (
+                strategy VARCHAR(100) UNIQUE NOT NULL,
+                enabled BOOLEAN NOT NULL DEFAULT 'false',
+                engine  VARCHAR(50) NOT NULL,
+                trigger_time TIME NOT NULL,
+                trigger_days VARCHAR(100) NOT NULL,
+                cdl_size SMALLINT NOT NULL,
+                instruments TEXT,
+                controls JSON
             );"""
-        conn.execute(tradingSignalsTblQuery)
+        conn.execute(sqlQuery)
