@@ -1,3 +1,6 @@
+-- ##################################################################  delete view
+DROP MATERIALIZED VIEW candles_15min
+
 -- ##################################################################  view symbol within specific time frame
 select * from ticks_data 
  WHERE (time between '2022-01-25 09:00:00' and '2022-01-25 09:40:00')
