@@ -10,16 +10,14 @@
 
 
 ## Invoke trade signal
-http://0.0.0.0:5000/tradesignals/?algo=S001-ORB-001&symbol=BANKNIFTY&date=2022-01-25        
+http://0.0.0.0:5000/tradesignals/?algo=algoid&symbol=symbolid&date=yyyy-mm-dd
 
 
 ## Dependencies
 pipreqs --force
 pip3 install --upgrade -r ./requirements.txt
-Issue with code-server, version is removed from reqs for
-numpy
-pandas
-psycopg2-binary
+
+Issue with code-server, version is removed from reqs for psycopg2-binary
 
 ## Build DOCKER Image
 DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-analysis-service:latest .
