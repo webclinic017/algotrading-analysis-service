@@ -1,6 +1,5 @@
 import os
 import json
-from pgcopy.copy import null
 import psycopg2
 import sqlalchemy
 import pandas as pd
