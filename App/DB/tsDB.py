@@ -78,6 +78,34 @@ def saveTradeSignalsToDB(conn, df):
     df.to_sql('signals_trading', conn, if_exists='append', index=False)
 
 
+# drop table if exists, then create table and insert data
+def saveInstrumentsToDB(conn, df):
+    if (db_table_exists(conn, "instruments")) == True:
+        sql = f"DROP TABLE instruments"
+        conn.execute(sql)
+
+    sqlQuery = """CREATE TABLE instruments (
+                        instrument_token INTEGER NOT NULL,
+                        exchange_token INTEGER NOT NULL,
+                        tradingsymbol TEXT NOT NULL,
+                        "name" TEXT NULL,
+                        last_price DOUBLE PRECISION NULL DEFAULT 0,
+                        expiry DATE NULL,
+                        strike DOUBLE PRECISION NULL,
+                        tick_size DOUBLE PRECISION NULL,
+                        lot_size INTEGER NULL,
+                        instrument_type VARCHAR(10) NULL,
+                        segment VARCHAR(10) NULL,
+                        exchange VARCHAR(10) NULL
+                    );"""
+    conn.execute(sqlQuery)
+    df.to_sql('instruments', conn, if_exists='replace', index=False)
+
+
+def saveDataFrameToDB(conn, df):
+    df.to_sql('instruments', conn, if_exists='append', index=False)
+
+
 def createAllTables(conn):
     if (db_table_exists(conn, "signals_trading")) == False:
         # create table
@@ -99,7 +127,6 @@ def createAllTables(conn):
             swing_max DOUBLE PRECISION DEFAULT 0.0,
             swing_min_time TIME DEFAULT '00:00:00',
             swing_max_time TIME DEFAULT '00:00:00'
-            
         );"""
         conn.execute(sqlQuery)
 

@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 from App.Strategies import Strategies
 from App.Engine import Engines
+from App.Services import Services
 from App.DB import tsDB
 import pandas as pd
 
@@ -23,8 +24,13 @@ tsDB.createAllTables(dbConn)
 def read_root():
     return {
         "Hello":
-        "Welcome to algotrading-analysis-service v0.1.5 Rel Date: 8-Mar-2022"
+        "Welcome to algotrading-analysis-service v0.1.6 Rel Date: 23-Mar-2022"
     }
+
+
+@app.get("/services/")
+def read_item(sid: str):
+    return Services.execute(dbConn, sid)
 
 
 @app.get("/tradesignals/")
