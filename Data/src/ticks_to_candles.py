@@ -8,45 +8,29 @@ from glob import iglob
 date = '2022-04-04'
 path = r'/home/parag/devArea/algotrading-analysis-service/Data/src/*.csv'
 
-# df = pd.read_csv(path, parse_dates=["date"], index_col="date")
-
 df = pd.concat((pd.read_csv(f, sep=',') for f in iglob(path, recursive=True)),
                ignore_index=True)
 
-print(df)
 df['Datetime'] = pd.to_datetime(df['time'])
 df = df.set_index('Datetime')
 
+# get unique symbols
 symlist = df.symbol.unique()
 
 for x in symlist:
     df1 = df[df['symbol'] == x]
+    df1.to_csv(x + 'raw.csv')
     print(len(df1))
-    df1 = df1.drop(columns=[
-        'time', 'symbol', "buy_demand", "sell_demand", "trades_till_now",
-        "open_interest"
-    ])
-    print(df1)
-    df1 = df1.resample('1T').ohlc()
-    print(len(df1))
-    df1.to_csv(x + '.csv')
+    freq = '1T'
 
-# "time", "symbol", "last_traded_price"
+    dfmerged = df1['last_traded_price'].resample(freq).ohlc()
+    dfmerged['volume'] = df1['trades_till_now'].resample(
+        '1T').last() - df1['trades_till_now'].resample(freq).first()
 
-# df.set_index('time', inplace=True)
+    dfmerged['buy_demand'] = df1['buy_demand'].resample(freq).median()
+    dfmerged['sell_demand'] = df1['sell_demand'].resample(freq).median()
 
-# for x in range(0, 1, 1):
-#     current_date_temp = datetime.datetime.strptime(date, "%Y-%m-%d")
-#     new_date = current_date_temp + datetime.timedelta(days=x)
-#     dateFetch = new_date.strftime("%Y-%m-%d")
-#     df = tsDB.fetchTicksData(dbConn, dateFetch)
-#     print(len(df))
-#     df.to_csv(dateFetch + '.csv')
+    dfmerged['open_interest'] = df1['open_interest'].resample(freq).median()
 
-# https://stackoverflow.com/questions/36222928/pandas-ohlc-aggregation-on-ohlc-data
-# def ohlcVolume(x):
-#     if len(x):
-#         ohlc={ "open":x["open"][0],"high":max(x["high"]),"low":min(x["low"]),"close":x["close"][-1],"volume":sum(x["volume"])}
-#         return pd.Series(ohlc)
-
-# daily=df.resample('1D').apply(ohlcVolume)
+    print(len(dfmerged))
+    dfmerged.to_csv(x + '-m.csv')
