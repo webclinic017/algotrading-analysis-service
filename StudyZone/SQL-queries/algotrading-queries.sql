@@ -1,3 +1,53 @@
+-- ##################################################################  instruments
+-- load futures tokens based on intruments and tracking_symbols
+SELECT i.instrument_token, ts.mysymbol, i.exchange, ts.mysymbol, i.tradingsymbol 
+    FROM tracking_symbols ts, instruments i
+    WHERE 
+    		ts.symbol = i.name
+		and 
+			ts.segment = i.instrument_type 
+		and 
+			ts.exchange = i.exchange
+    	and 
+    		EXTRACT(MONTH FROM TO_DATE(i.expiry,'YYYY-MM-DD')) = EXTRACT(MONTH FROM current_date);
+-- select * from tracking_symbols where mysymbol = 'NIFTY-FUT';
+
+-- fetch Option instruments
+SELECT tradingsymbol, lot_size
+    FROM tracking_symbols ts, instruments i
+    WHERE 
+    		ts.symbol = i.name 
+    	and 
+    		mysymbol= 'BANKNIFTY-FUT' 
+    	and 
+    		strike >= (35120  + 5*ts.strikestep)
+		and 
+    		strike < (35120 + ts.strikestep + 5*ts.strikestep)     		
+    	and 
+    		tradingsymbol like '%PE' 
+    	and 
+    		expiry > '2022-03-23'
+    	and 
+    		expiry < '2022-03-30'
+	ORDER BY 
+		expiry asc
+	LIMIT 10;
+
+-- fetch FUT instruments
+
+ -- fetch EQ instruments
+SELECT tradingsymbol, lot_size
+    FROM tracking_symbols ts, instruments i
+    WHERE 
+    		ts.symbol = i.name 
+    	and 
+    		ts.mysymbol = 'ASHOK LEYLAND' 
+    	and
+    		i.segment = 'NSE'
+       	and 
+    		instrument_type = 'EQ'  
+	LIMIT 100;
+
 -- ##################################################################  delete view
 DROP MATERIALIZED VIEW candles_15min
 

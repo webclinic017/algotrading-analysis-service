@@ -3,6 +3,7 @@ import json
 import psycopg2
 import sqlalchemy
 import pandas as pd
+import datetime
 from os.path import exists
 from pandas.io.json import json_normalize
 import App.Libraries.lib_results as res
@@ -17,12 +18,13 @@ def dbConnect():  # connect to database
         f = open(credentials_file, "r")
         credentials = json.load(f)
         f.close()
+        prefix = credentials['envprefix']
         db_url = 'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}'.format(
-            database=credentials["DB_NAME"],
-            host=credentials["DB_HOST"],
-            user=credentials["DB_USER"],
-            password=credentials["DB_PASS"],
-            port=credentials["DB_PORT"])
+            database=credentials[prefix + "DB_NAME"],
+            host=credentials[prefix + "DB_HOST"],
+            user=credentials[prefix + "DB_USER"],
+            password=credentials[prefix + "DB_PASS"],
+            port=credentials[prefix + "DB_PORT"])
 
     else:
         db_url = 'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}'.format(
@@ -72,6 +74,15 @@ def fetchCandlesBetweenSingleSymbol(conn, symbol, sdatetime, edatetime,
 def fetchCandlesOnDate(conn, symbol, date, candleSize):
     sql = f"SELECT * FROM candles_{candleSize}min WHERE symbol LIKE '%%{symbol}%%' AND DATE_TRUNC('day', candle) = '{date}' ORDER BY candle DESC"
     return pd.read_sql(sql, conn)
+
+
+def fetchTicksData(conn, current_date):
+    current_date_temp = datetime.datetime.strptime(current_date, "%Y-%m-%d")
+    new_date = current_date_temp + datetime.timedelta(days=1)
+
+    sql = f"SELECT * FROM ticks_nsefut WHERE time >= '{current_date}' AND time < '{new_date}'"
+    df = pd.read_sql(sql, conn)
+    return df
 
 
 def saveTradeSignalsToDB(conn, df):

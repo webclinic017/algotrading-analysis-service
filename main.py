@@ -23,8 +23,8 @@ tsDB.createAllTables(dbConn)
 @app.get("/")
 def read_root():
     return {
-        "Hello":
-        "Welcome to algotrading-analysis-service v0.1.6 Rel Date: 23-Mar-2022"
+        "Info":
+        "algotrading-analysis-service v0.1.6 (Rel Date: 23-Mar-2022) [00]"
     }
 
 
