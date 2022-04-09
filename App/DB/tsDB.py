@@ -77,12 +77,13 @@ def fetchCandlesOnDate(conn, symbol, date, candleSize):
 
 
 def fetchTicksData(conn, current_date):
-    current_date_temp = datetime.datetime.strptime(current_date, "%Y-%m-%d")
-    new_date = current_date_temp + datetime.timedelta(days=1)
-
-    sql = f"SELECT * FROM ticks_nsefut WHERE time >= '{current_date}' AND time < '{new_date}'"
+    sql = f"SELECT  * FROM ticks_stk WHERE CAST(time AS date) = '{current_date}' UNION ALL SELECT * FROM ticks_nsefut WHERE CAST(time AS date) = '{current_date}'"
     df = pd.read_sql(sql, conn)
     return df
+
+
+def saveCandles(conn, df):
+    df.to_sql('candles_1min', conn, if_exists='append')
 
 
 def saveTradeSignalsToDB(conn, df):
@@ -118,6 +119,25 @@ def saveDataFrameToDB(conn, df):
 
 
 def createAllTables(conn):
+
+    if (db_table_exists(conn, "candles_1min")) == False:
+        # create table
+        sqlQuery = """CREATE TABLE candles_1min (
+            time TIMESTAMP NOT NULL,
+            symbol TEXT NOT NULL,
+            open DOUBLE PRECISION,
+            high DOUBLE PRECISION,
+            low DOUBLE PRECISION,
+            close DOUBLE PRECISION,
+            volume INTEGER DEFAULT 0,
+            buy_demand INTEGER DEFAULT 0,
+            sell_demand INTEGER DEFAULT 0,
+            open_interest INTEGER DEFAULT 0
+            );
+            SELECT create_hypertable('candles_1min', 'time');
+            SELECT set_chunk_time_interval('candles_1min', INTERVAL '1 months');"""
+        conn.execute(sqlQuery)
+
     if (db_table_exists(conn, "signals_trading")) == False:
         # create table
         sqlQuery = """CREATE TABLE signals_trading (

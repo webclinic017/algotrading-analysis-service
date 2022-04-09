@@ -29,8 +29,8 @@ def read_root():
 
 
 @app.get("/services/")
-def read_item(sid: str):
-    return Services.execute(dbConn, sid)
+def read_item(sid: str, date: Optional[str] = None):
+    return Services.execute(dbConn, sid, date)
 
 
 @app.get("/tradesignals/")
