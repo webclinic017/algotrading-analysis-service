@@ -135,7 +135,10 @@ def createAllTables(conn):
             open_interest INTEGER DEFAULT 0
             );
             SELECT create_hypertable('candles_1min', 'time');
-            SELECT set_chunk_time_interval('candles_1min', INTERVAL '1 months');"""
+            SELECT set_chunk_time_interval('candles_1min', INTERVAL '1 months');
+            ALTER TABLE candles_1min SET (timescaledb.compress, timescaledb.compress_orderby = 'time DESC', timescaledb.compress_segmentby = 'symbol');
+            SELECT add_compression_policy('candles_1min', INTERVAL '1 months');"""
+
         conn.execute(sqlQuery)
 
     if (db_table_exists(conn, "signals_trading")) == False:
