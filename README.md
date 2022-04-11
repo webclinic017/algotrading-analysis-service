@@ -25,3 +25,10 @@ DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-analysis-service:latest .
 docker run -d --name algotrading-analysis-service  -p 80:5000 paragba/algotrading-analysis-service:latest
 
 docker rm --force algotrading-analysis-service
+
+
+## Version : In-Development
+
+
+## Version : 0.1.7
+ - DB - compression policy updated
