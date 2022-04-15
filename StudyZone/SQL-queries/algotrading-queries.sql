@@ -1,7 +1,7 @@
 -- ##################################################################  instruments
--- load futures tokens based on intruments and tracking_symbols
+-- load futures tokens based on intruments and user_symbols
 SELECT i.instrument_token, ts.mysymbol, i.exchange, ts.mysymbol, i.tradingsymbol 
-    FROM tracking_symbols ts, instruments i
+    FROM user_symbols ts, instruments i
     WHERE 
     		ts.symbol = i.name
 		and 
@@ -10,11 +10,11 @@ SELECT i.instrument_token, ts.mysymbol, i.exchange, ts.mysymbol, i.tradingsymbol
 			ts.exchange = i.exchange
     	and 
     		EXTRACT(MONTH FROM TO_DATE(i.expiry,'YYYY-MM-DD')) = EXTRACT(MONTH FROM current_date);
--- select * from tracking_symbols where mysymbol = 'NIFTY-FUT';
+-- select * from user_symbols where mysymbol = 'NIFTY-FUT';
 
 -- fetch Option instruments
 SELECT tradingsymbol, lot_size
-    FROM tracking_symbols ts, instruments i
+    FROM user_symbols ts, instruments i
     WHERE 
     		ts.symbol = i.name 
     	and 
@@ -37,7 +37,7 @@ SELECT tradingsymbol, lot_size
 
  -- fetch EQ instruments
 SELECT tradingsymbol, lot_size
-    FROM tracking_symbols ts, instruments i
+    FROM user_symbols ts, instruments i
     WHERE 
     		ts.symbol = i.name 
     	and 

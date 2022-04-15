@@ -92,11 +92,11 @@ def saveTradeSignalsToDB(conn, df):
 
 # drop table if exists, then create table and insert data
 def saveInstrumentsToDB(conn, df):
-    if (db_table_exists(conn, "instruments")) == True:
-        sql = f"DROP TABLE instruments"
+    if (db_table_exists(conn, "tick_instr")) == True:
+        sql = f"DROP TABLE tick_instr"
         conn.execute(sql)
 
-    sqlQuery = """CREATE TABLE instruments (
+    sqlQuery = """CREATE TABLE tick_instr (
                         instrument_token INTEGER NOT NULL,
                         exchange_token INTEGER NOT NULL,
                         tradingsymbol TEXT NOT NULL,
@@ -111,11 +111,11 @@ def saveInstrumentsToDB(conn, df):
                         exchange VARCHAR(10) NULL
                     );"""
     conn.execute(sqlQuery)
-    df.to_sql('instruments', conn, if_exists='replace', index=False)
+    df.to_sql('tick_instr', conn, if_exists='replace', index=False)
 
 
 def saveDataFrameToDB(conn, df):
-    df.to_sql('instruments', conn, if_exists='append', index=False)
+    df.to_sql('tick_instr', conn, if_exists='append', index=False)
 
 
 def createAllTables(conn):
@@ -141,9 +141,9 @@ def createAllTables(conn):
 
         conn.execute(sqlQuery)
 
-    if (db_table_exists(conn, "signals_trading")) == False:
+    if (db_table_exists(conn, "order_trades")) == False:
         # create table
-        sqlQuery = """CREATE TABLE signals_trading (
+        sqlQuery = """CREATE TABLE order_trades (
             id SERIAL PRIMARY KEY NOT NULL,
             date DATE NOT NULL,
             instr TEXT NOT NULL,
@@ -164,9 +164,9 @@ def createAllTables(conn):
         );"""
         conn.execute(sqlQuery)
 
-    if (db_table_exists(conn, "signals_simulation")) == False:
+    if (db_table_exists(conn, "order_sims")) == False:
         # create table
-        sqlQuery = """CREATE TABLE signals_simulation (
+        sqlQuery = """CREATE TABLE order_sims (
             s_order_id SERIAL PRIMARY KEY NOT NULL,
             strategy_id  VARCHAR(50) NOT NULL,
             simulation_id INTEGER,
@@ -192,9 +192,9 @@ def createAllTables(conn):
         );"""
         conn.execute(sqlQuery)
 
-    if (db_table_exists(conn, "strategies")) == False:
+    if (db_table_exists(conn, "user_strategies")) == False:
         # create table
-        sqlQuery = """CREATE TABLE strategies (
+        sqlQuery = """CREATE TABLE user_strategies (
                 strategy VARCHAR(100) UNIQUE NOT NULL,
                 enabled BOOLEAN NOT NULL DEFAULT 'false',
                 engine  VARCHAR(50) NOT NULL,
@@ -203,5 +203,25 @@ def createAllTables(conn):
                 cdl_size SMALLINT NOT NULL,
                 instruments TEXT,
                 controls JSON
+            );"""
+        conn.execute(sqlQuery)
+
+    if (db_table_exists(conn, "user_symbols")) == False:
+        # create table
+        sqlQuery = """CREATE TABLE user_symbols (
+                symbol varchar NOT NULL,
+                track bool NULL DEFAULT false,
+                segment varchar NOT NULL,
+                mysymbol varchar NOT NULL,
+                strikestep float4 NULL DEFAULT 0,
+                exchange varchar NULL
+            );"""
+        conn.execute(sqlQuery)
+
+    if (db_table_exists(conn, "user_settings")) == False:
+        # create table
+        sqlQuery = """CREATE TABLE user_settings (
+                name varchar NOT NULL,
+                controls JSON NOT NULL
             );"""
         conn.execute(sqlQuery)

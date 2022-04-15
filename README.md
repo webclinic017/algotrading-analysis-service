@@ -28,7 +28,7 @@ docker rm --force algotrading-analysis-service
 
 
 ## Version : In-Development
-
+* DB - table names updated
 
 ## Version : 0.1.7
- - DB - compression policy updated
+* DB - compression policy updated
