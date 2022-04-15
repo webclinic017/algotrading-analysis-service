@@ -51,7 +51,7 @@ def db_table_exists(conn, tablename):
 
 
 def readAlgoParamsJson(conn, cellValue):
-    sql = f"select * from strategies where strategy = '{cellValue}' "
+    sql = f"select * from user_strategies where strategy = '{cellValue}' "
     df = pd.read_sql(sql, conn)
     df2 = json_normalize(df.iloc[0]['controls'])
     df_merged = pd.concat([df, df2], axis=1)
@@ -67,7 +67,7 @@ def fetchCandlesBetweenMultiSymbol(conn, symbol, sdatetime, edatetime,
 
 def fetchCandlesBetweenSingleSymbol(conn, symbol, sdatetime, edatetime,
                                     candleSize):
-    sql = f"select * FROM candles_{candleSize}min WHERE (candle between '{sdatetime}' and '{edatetime}') and symbol like '{symbol}' ORDER by candle asc"
+    sql = f"select * FROM candles_{candleSize}min WHERE (time between '{sdatetime}' and '{edatetime}') and symbol like '{symbol}' ORDER by time asc"
     return pd.read_sql(sql, conn)
 
 
@@ -148,47 +148,18 @@ def createAllTables(conn):
             date DATE NOT NULL,
             instr TEXT NOT NULL,
             strategy  VARCHAR(100) NOT NULL,
-            dir VARCHAR(50) NOT NULL,
-            entry DOUBLE PRECISION DEFAULT 0.0,
-            entry_time TIME DEFAULT '00:00:00',
-            target DOUBLE PRECISION NOT NULL,
-            stoploss DOUBLE PRECISION NOT NULL,
-            trade_id INTEGER DEFAULT 0,
-            exit_val DOUBLE PRECISION DEFAULT 0.0,
-            exit_time TIME DEFAULT '00:00:00',
+            status TEXT,
+            instr_id INTEGER,
+            dir VARCHAR(50),
+            entry DOUBLE PRECISION,
+            target DOUBLE PRECISION,
+            stoploss DOUBLE PRECISION,
+            order_id INTEGER,
+            order_trades_entry JSON,
+            order_trade_exit JSON,
+            order_simulation JSON,
             exit_reason TEXT  DEFAULT 'NA',
-            swing_min DOUBLE PRECISION DEFAULT 0.0,
-            swing_max DOUBLE PRECISION DEFAULT 0.0,
-            swing_min_time TIME DEFAULT '00:00:00',
-            swing_max_time TIME DEFAULT '00:00:00'
-        );"""
-        conn.execute(sqlQuery)
-
-    if (db_table_exists(conn, "order_sims")) == False:
-        # create table
-        sqlQuery = """CREATE TABLE order_sims (
-            s_order_id SERIAL PRIMARY KEY NOT NULL,
-            strategy_id  VARCHAR(50) NOT NULL,
-            simulation_id INTEGER,
-            
-            s_date DATE NOT NULL,
-            s_direction VARCHAR(50) NOT NULL,
-            t_entry DOUBLE PRECISION NOT NULL,
-            t_entry_time TIME NOT NULL,
-            s_target DOUBLE PRECISION NOT NULL,
-            s_stoploss DOUBLE PRECISION NOT NULL,
-            t_trade_confirmed_en BOOLEAN,
-            s_instr_token VARCHAR(200),
-
-            r_exit_val DOUBLE PRECISION,
-            r_exit_time TIME,
-            r_exit_reason VARCHAR(100),
-
-            r_swing_min DOUBLE PRECISION,
-            r_swing_max DOUBLE PRECISION,
-            r_swing_min_time TIME,
-            r_swing_max_time TIME
-
+            post_analysis JSON
         );"""
         conn.execute(sqlQuery)
 

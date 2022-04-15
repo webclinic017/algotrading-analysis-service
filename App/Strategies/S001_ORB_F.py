@@ -35,7 +35,7 @@ ENTRY_GAP_DELTA_PERCENTAGE = 0
 #  symbol = "BANKNIFTY"
 #  date = "2022-01-25"
 #
-def S001_ORB(algo, df, date, algoParams, results):
+def S001_ORB(algo, symbol, df, date, algoParams, results):
 
     try:
 
@@ -72,7 +72,7 @@ def S001_ORB(algo, df, date, algoParams, results):
         cdl_926 = df.at[date + ' 09:25', 'close']
         cdl_926open = df.at[date + ' 09:25', 'open']
         cdl_930 = df.at[date + ' 09:30', 'close']
-        results.at[0, "instr"] = df.at[date + ' 09:15', 'symbol']
+        results.at[0, "instr"] = symbol
 
         orbDelta = (abs(orb_high - orb_low) * ENTRY_GAP_DELTA_PERCENTAGE) / 100
 
