@@ -92,11 +92,11 @@ def saveTradeSignalsToDB(conn, df):
 
 # drop table if exists, then create table and insert data
 def saveInstrumentsToDB(conn, df):
-    if (db_table_exists(conn, "tick_instr")) == True:
-        sql = f"DROP TABLE tick_instr"
+    if (db_table_exists(conn, "ticks_instr")) == True:
+        sql = f"DROP TABLE ticks_instr"
         conn.execute(sql)
 
-    sqlQuery = """CREATE TABLE tick_instr (
+    sqlQuery = """CREATE TABLE ticks_instr (
                         instrument_token INTEGER NOT NULL,
                         exchange_token INTEGER NOT NULL,
                         tradingsymbol TEXT NOT NULL,
@@ -111,11 +111,11 @@ def saveInstrumentsToDB(conn, df):
                         exchange VARCHAR(10) NULL
                     );"""
     conn.execute(sqlQuery)
-    df.to_sql('tick_instr', conn, if_exists='replace', index=False)
+    df.to_sql('ticks_instr', conn, if_exists='replace', index=False)
 
 
 def saveDataFrameToDB(conn, df):
-    df.to_sql('tick_instr', conn, if_exists='append', index=False)
+    df.to_sql('ticks_instr', conn, if_exists='append', index=False)
 
 
 def createAllTables(conn):
@@ -139,60 +139,4 @@ def createAllTables(conn):
             ALTER TABLE candles_1min SET (timescaledb.compress, timescaledb.compress_orderby = 'time DESC', timescaledb.compress_segmentby = 'symbol');
             SELECT add_compression_policy('candles_1min', INTERVAL '1 months');"""
 
-        conn.execute(sqlQuery)
-
-    if (db_table_exists(conn, "order_trades")) == False:
-        # create table
-        sqlQuery = """CREATE TABLE order_trades (
-            id SERIAL PRIMARY KEY NOT NULL,
-            date DATE NOT NULL,
-            instr TEXT NOT NULL,
-            strategy  VARCHAR(100) NOT NULL,
-            status TEXT,
-            instr_id INTEGER,
-            dir VARCHAR(50),
-            entry DOUBLE PRECISION,
-            target DOUBLE PRECISION,
-            stoploss DOUBLE PRECISION,
-            order_id INTEGER,
-            order_trades_entry JSON,
-            order_trade_exit JSON,
-            order_simulation JSON,
-            exit_reason TEXT  DEFAULT 'NA',
-            post_analysis JSON
-        );"""
-        conn.execute(sqlQuery)
-
-    if (db_table_exists(conn, "user_strategies")) == False:
-        # create table
-        sqlQuery = """CREATE TABLE user_strategies (
-                strategy VARCHAR(100) UNIQUE NOT NULL,
-                enabled BOOLEAN NOT NULL DEFAULT 'false',
-                engine  VARCHAR(50) NOT NULL,
-                trigger_time TIME NOT NULL,
-                trigger_days VARCHAR(100) NOT NULL,
-                cdl_size SMALLINT NOT NULL,
-                instruments TEXT,
-                controls JSON
-            );"""
-        conn.execute(sqlQuery)
-
-    if (db_table_exists(conn, "user_symbols")) == False:
-        # create table
-        sqlQuery = """CREATE TABLE user_symbols (
-                symbol varchar NOT NULL,
-                track bool NULL DEFAULT false,
-                segment varchar NOT NULL,
-                mysymbol varchar NOT NULL,
-                strikestep float4 NULL DEFAULT 0,
-                exchange varchar NULL
-            );"""
-        conn.execute(sqlQuery)
-
-    if (db_table_exists(conn, "user_settings")) == False:
-        # create table
-        sqlQuery = """CREATE TABLE user_settings (
-                name varchar NOT NULL,
-                controls JSON NOT NULL
-            );"""
         conn.execute(sqlQuery)
