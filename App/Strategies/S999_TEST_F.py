@@ -34,4 +34,4 @@ def S999_TEST(algo, symbol, df, date, algoParams, results):
     results.at[0, "target"] = 100
     results.at[0, "stoploss"] = 200
     results.at[0, "entry"] = 300
-    results.at[0, "entry_time"] = timeStamp
+    results.at[0, "status"] = "signal-processed"
