@@ -15,6 +15,7 @@ def execute(dbConn, multisymbol, algo, symbol, date):
     results = pd.DataFrame(columns=res.trade_signal_header_list)
 
     # 1. Fetch params for algo
+    algo = algo[:-5]
     algoParams = db.readAlgoParamsJson(dbConn, algo)
 
     # 2. Fetch candles
@@ -52,5 +53,6 @@ def execute(dbConn, multisymbol, algo, symbol, date):
         json_str = summary.to_json(orient="records")
         parsed = json.loads(json_str)
         return parsed
+
     else:
         return "No Algo Found"
