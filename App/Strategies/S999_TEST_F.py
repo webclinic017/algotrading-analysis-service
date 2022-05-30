@@ -33,6 +33,6 @@ def S999_TEST(algo, symbol, df, date, algoParams, results):
     results.at[0, "dir"] = "Bullish"
     results.at[0, "target"] = 100
     results.at[0, "stoploss"] = 200
-    results.at[0, "entry"] = 300
+    results.at[0, "trigger_value"] = 300
     results.at[0, "status"] = "signal-processed"
     results.at[0, "exit_reason"] = "Target Reached"
