@@ -1,8 +1,8 @@
 __pycache__
 credentials.json
-Data/candles_1min_t_202201102340.csv
-ORB-Force.json
-ORB-Force.csv
 .~*.csv#
 *.csv
 *.ods
+*.zip
+ticks_nsefut
+ticks_nsestk
