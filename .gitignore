@@ -4,5 +4,6 @@ credentials.json
 *.csv
 *.ods
 *.zip
+*.7z
 ticks_nsefut
 ticks_nsestk

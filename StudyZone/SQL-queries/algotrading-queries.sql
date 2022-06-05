@@ -56,9 +56,16 @@ select * from ticks_data
  WHERE (time between '2022-01-25 09:00:00' and '2022-01-25 09:40:00')
  and symbol like '%BANKNIFTY%'
 ORDER by time asc;
- 
+
+-- ### ALTERNATE
+SELECT * FROM ticks t  WHERE "time" LIKE '2022-01-18%' AND symbol LIKE '%-IDX';
+
+--- ### ALTERNATE
+SELECT * FROM ticks_nsefut_zip_lcl t WHERE DATE(time) = '2015-06-29';
+
+
 -- ##################################################################  view tick count for each day
-SELECT 
+SELECT
     DATE_TRUNC('day', "time") AS "day", 
 	COUNT("time") AS "total ticks"
 FROM public.ticks_data

@@ -1,18 +1,15 @@
-import os
-import glob
-import json
-import sqlalchemy
-import numpy as np
+import datetime
 import pandas as pd
 from sqlalchemy import text
 from os.path import exists
+import os
+import json
+import sqlalchemy
 
-BASE_PATH = "/home/parag/devArea/algotrading-analysis-service/Data/"
-TABLE = 'candles_1min'
-
+BASE_PATH = "/home/parag/devArea/algotrading-analysis-service/Data/1min_nsefut_zip/"
+TABLE = 'ticks_nsefut_zip_lcl'
 header_list = [
     'time',
-    'symbol',
     'open',
     'high',
     'low',
@@ -21,6 +18,7 @@ header_list = [
     'buy_demand',
     'sell_demand',
     'open_interest',
+    'symbol',
 ]
 
 
@@ -47,19 +45,19 @@ def dbConnect():  # connect to database
 
 dbConn = dbConnect()
 
-folders = ["1min_nsefut_zip/", "1min_nsefut/", "1min_nsestk/"]
+sql = f"SELECT DISTINCT(DATE(time)) FROM {TABLE};"
+dfDates = pd.read_sql(text(sql), dbConn)
 
-for x in folders:
-    SUB_PATH = x
-    path = BASE_PATH + SUB_PATH + '*.csv'
-    cnt = 0
+for x in range(len(dfDates)):
+    print(x, 'of', len(dfDates))
+    sql = f"SELECT * FROM ticks_nsefut_zip_lcl t WHERE DATE(time) = '{dfDates.iloc[x]['date']}';"
+    df = pd.read_sql(text(sql), dbConn)
+    symlist = df.symbol.unique()
 
-    for filename in glob.glob(path):
-        cnt = cnt + 1
-        df = pd.read_csv(
-            filename,
-            sep=',',
-            header=0,
-        )
-        print(str(cnt), filename + ' len:' + str(len(df)))
-        df.to_sql(TABLE, dbConn, if_exists='append', index=False)
+    f = BASE_PATH + str(dfDates.iloc[x]['date']) + ' ( Symbols ' + str(
+        len(symlist)) + ' - Rows ' + str(len(df)) + ' ).csv'
+    df["volume"] = ""
+    df["buy_demand"] = ""
+    df["sell_demand"] = ""
+    df["open_interest"] = ""
+    df.to_csv(f, index=False, columns=header_list)
