@@ -80,6 +80,10 @@ FROM _timescaledb_internal.hypertable_chunk_local_size
 WHERE NOT(hypertable_name like '_compressed%')
 ORDER BY total_bytes desc
 
+-- ################################################################## Copy specific date
+
+SELECT * FROM ticks_nsefut WHERE CAST(time AS date) = '2022-05-30 00:00:00';
+
 -- ################################################################## Compression
 
 -- remove hypertable compression 
