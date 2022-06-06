@@ -20,42 +20,42 @@ def getTimeCandle(Xdf, Xcol, Xtime):
 
 def convertCandleSize(selectedDate, dataDF, cdlSize):
 
-    try:
+    from App.DB import tsDB
 
-        # check if candle(s) before 09:16 is present, then copy to 09:16(next) and delete
-        cdl0908DF = dataDF.loc[dataDF.index < selectedDate + ' 09:15']
 
-        if not cdl0908DF.empty:
+# import datetime
+import pandas as pd
+from glob import iglob
 
-            # check if more than one candle before 09:16
-            if (len(cdl0908DF.index) == 1):
 
-                # we will remove the first entry @ 09:08 and copy Open to 9:15 candle
-                dataDF.at[dataDF.index[1], 'Open'] = dataDF.at[dataDF.index[0],
-                                                               'Open']
+def CdlConv(df, freq):
 
-                # Remove the frist entry 09:08
-                dataDF.drop(dataDF.head(1).index, inplace=True)
-                # resample to new timedelta
-                dataDF = dataDF.resample(cdlSize, closed='right').agg({ 'Open': lambda s: s[0], \
-                                              'High': lambda dataDF: dataDF.max(),\
-                                              'Low': lambda dataDF: dataDF.min(),\
-                                              'Close': lambda dataDF: dataDF[-1]})
-                return dataDF
+    df['time'] = pd.to_datetime(df['time'])
+    df = df.set_index('time')
 
-            else:
-                print("ERR: lib_CANDLES - More than one candle before 09:16")
+    # get unique symbols
+    symlist = df.symbol.unique()
 
-        else:
-            # resample to new timedelta
-            dataDF = dataDF.resample(cdlSize, closed='right').agg({ 'Open': lambda s: s[0], \
-                                              'High': lambda s: s.max(),\
-                                              'Low': lambda s: s.min(),\
-                                              'Close': lambda s: s[-1]})
-            return dataDF
+    for x in symlist:
+        df1 = df[df['symbol'] == x]
+        df1.to_csv("check-org.csv")
 
-    except Exception as e:
-        print("lib_CANDLES/convertCandleSize() Data Error", selectedDate, e)
-        #print(selectedDate, dataDF, cdlSize)
+        # ohlc
+        dfmerged = df1['last_traded_price'].resample(freq).ohlc()
 
-        return dataDF
+        # volume
+        dfmerged['volume'] = df1['trades_till_now'].resample(
+            '1T').last() - df1['trades_till_now'].resample(freq).first()
+
+        # buy_demand & sell_demand
+        dfmerged['buy_demand'] = df1['buy_demand'].resample(freq).median()
+        dfmerged['sell_demand'] = df1['sell_demand'].resample(freq).median()
+
+        # open_interest
+        dfmerged['open_interest'] = df1['open_interest'].resample(
+            freq).median()
+
+        # symbol
+        dfmerged['symbol'] = x
+        # dfmerged.drop(['trades_till_now'], axis=1, inplace=True)
+    return dfmerged

@@ -1,54 +1,57 @@
-from ast import Or
-from numpy import setdiff1d
-from App.Strategies.S001_ORB_F import S001_ORB
-from App.Strategies.S999_TEST_F import S999_TEST
-import App.DB.tsDB as db
-from App.Libraries.lib_AlgoParams import AlgoParam
-import App.Libraries.lib_results as res
-import pandas as pd
 import json
+import pandas as pd
+
+import App.DB.tsDB as db
+import App.Strategies.S001_ORB_F as S001
+import App.Libraries as lib
 
 
-def execute(dbConn, multisymbol, algo, symbol, date):
+def execute(dbConn, algoID, symbol, date, ticks, trading):
 
-    summary = pd.DataFrame(columns=res.trade_signal_header_list)
-    results = pd.DataFrame(columns=res.trade_signal_header_list)
+    summary = pd.DataFrame(columns=lib.lib_results.trade_signal_header_list)
+    results = pd.DataFrame(columns=lib.lib_results.trade_signal_header_list)
 
     # 1. Fetch params for algo
-    algo = algo[:-5]
-    algoParams = db.readAlgoParamsJson(dbConn, algo)
+    algoParams = db.readAlgoParamsJson(dbConn, algoID[0:7])
 
     # 2. Fetch candles
-    if (multisymbol == True):
-        cdl = db.fetchCandlesBetweenMultiSymbol(dbConn, symbol,
-                                                date + " 09:00",
-                                                date + " 09:30", "1")
-    else:
-        cdl = db.fetchCandlesBetweenSingleSymbol(dbConn, symbol,
-                                                 date + " 09:00",
-                                                 date + " 09:30", "1")
-    # print(cdl)
+    cdl = db.getCdlBtwnTime(dbConn, symbol, date + " 09:00", date + " 09:31",
+                            "1")
+    if len(cdl) == 0:
+        return "No candles found for " + symbol + " on " + date
+
     sym = cdl.symbol.unique()
 
     # 3. Run algo for each symbol
-    baseAlgo = algo[:-4]
-    if baseAlgo == "S001-ORB":
+    baseAlgo = algoID[0:4]
+    if baseAlgo == "S001":
         for x in range(len(sym)):
             rslt_df = cdl[cdl['symbol'] == sym[x]]
             # print(sym[x])
-            rslt_df.set_index('candle', inplace=True)
-            S001_ORB(algo, symbol, rslt_df, date, algoParams, results)
-            # print(results)
-            if (results.at[0, "dir"] == "Bullish") or \
-                (results.at[0, "dir"] == "Bearish"):
+            rslt_df.set_index('time', inplace=True)
+            if '-entr' in algoID:
+                S001.S001_ORB_entr(algoID, symbol, rslt_df, date, algoParams,
+                                   results)
+            else:
+                S001.S001_ORB_exit(algoID, symbol, rslt_df, date, algoParams,
+                                   results)
+
+            if trading:
+                if (results.at[0, "dir"] == "Bullish") or \
+                    (results.at[0, "dir"] == "Bearish"):
+                    summary = summary.append(results)
+            else:
                 summary = summary.append(results)
 
-        # db.saveTradeSignalsToDB(dbConn, summary)
-        json_str = summary.to_json(orient="records")
-        parsed = json.loads(json_str)
-        return parsed
-    elif baseAlgo == "S999-TEST":
-        S999_TEST(algo, symbol, cdl, date, algoParams, results)
+        if trading:
+            json_str = summary.to_json(orient="records")
+            parsed = json.loads(json_str)
+            return parsed  # return JSON data - API caller
+        else:
+            return summary  # return DF data - Researcher caller
+
+    elif baseAlgo == "S999":
+        s.S999_TEST(algo, symbol, cdl, date, algoParams, results)
         summary = summary.append(results)
         json_str = summary.to_json(orient="records")
         parsed = json.loads(json_str)

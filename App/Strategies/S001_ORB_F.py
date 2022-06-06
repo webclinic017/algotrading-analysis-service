@@ -35,7 +35,7 @@ ENTRY_GAP_DELTA_PERCENTAGE = 0
 #  symbol = "BANKNIFTY"
 #  date = "2022-01-25"
 #
-def S001_ORB(algo, symbol, df, date, algoParams, results):
+def S001_ORB_entr(algo, symbol, df, date, algoParams, results):
 
     try:
 
@@ -47,7 +47,7 @@ def S001_ORB(algo, symbol, df, date, algoParams, results):
         import pytz, datetime
 
         latz = pytz.timezone("Asia/Kolkata")
-        print(latz)
+        # print(latz)
 
         dt = datetime.datetime.now(get_localzone())
         dt2 = datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute,
@@ -66,12 +66,12 @@ def S001_ORB(algo, symbol, df, date, algoParams, results):
 
         # orb_low, orb_high = orb.getORB(df)
         # print(df.at[date + ' 09:15', 'low'])
-        orb_low = df.at[date + ' 09:15', 'low']
-        orb_high = df.at[date + ' 09:15', 'high']
+        orb_low = df.at[date + ' 09:15:00', 'low']
+        orb_high = df.at[date + ' 09:15:00', 'high']
 
-        cdl_926 = df.at[date + ' 09:25', 'close']
-        cdl_926open = df.at[date + ' 09:25', 'open']
-        cdl_930 = df.at[date + ' 09:30', 'close']
+        cdl_926 = df.at[date + ' 09:25:00', 'close']
+        cdl_926open = df.at[date + ' 09:25:00', 'open']
+        cdl_930 = df.at[date + ' 09:30:00', 'close']
         results.at[0, "instr"] = symbol
 
         orbDelta = (abs(orb_high - orb_low) * ENTRY_GAP_DELTA_PERCENTAGE) / 100
@@ -112,6 +112,10 @@ def S001_ORB(algo, symbol, df, date, algoParams, results):
 
     else:
         return results
+
+
+def S001_ORB_exit(algo, symbol, df, date, algoParams, results):
+    return ""
 
     #   <th>strategy</th>
     #   <th>enabled</th>

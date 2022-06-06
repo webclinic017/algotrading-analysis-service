@@ -1,12 +1,15 @@
+from operator import contains
 import os
 import json
 import psycopg2
 import sqlalchemy
+from sqlalchemy import text
 import pandas as pd
-import datetime
+from datetime import datetime, date
 from os.path import exists
 from pandas.io.json import json_normalize
 import App.Libraries.lib_results as res
+import App.Libraries.lib_CANDLES as libC
 
 
 def dbConnect():  # connect to database
@@ -51,29 +54,39 @@ def db_table_exists(conn, tablename):
 
 
 def readAlgoParamsJson(conn, cellValue):
-    sql = f"select * from user_strategies where strategy = '{cellValue}' "
-    df = pd.read_sql(sql, conn)
-    df2 = json_normalize(df.iloc[0]['controls'])
-    df_merged = pd.concat([df, df2], axis=1)
-    df_merged.to_dict('records')
-    return df_merged
+
+    sql = f"SELECT  * FROM  paragvb_strategies_test WHERE  strategy LIKE '{cellValue}%';"
+    return pd.read_sql(text(sql), conn)
+    # if len(df):
+    # df2 = json_normalize(df.iloc[0]['controls'])
+    # df_merged = pd.concat([df, df2], axis=1)
+    # df_merged.to_dict('records')
+    # return df_merged
+    # else:
+    #     return
 
 
-def fetchCandlesBetweenMultiSymbol(conn, symbol, sdatetime, edatetime,
-                                   candleSize):
-    sql = f"select * FROM candles_{candleSize}min WHERE (candle between '{sdatetime}' and '{edatetime}') and symbol like '%%{symbol}%%' ORDER by candle asc"
-    return pd.read_sql(sql, conn)
+def getCdlBtwnTime(conn, symbol, sdatetime, edatetime, candleSize):
+    # print(datetime.today().date())
+    date_time_obj = datetime.strptime(edatetime, '%Y-%m-%d %H:%M')
+    # print(date_time_obj.date())
 
+    if date_time_obj.date() == datetime.today().date():
+        sql = f"SELECT  * FROM ticks_stk WHERE (time BETWEEN '{sdatetime}' AND '{edatetime}') UNION ALL SELECT * FROM ticks_nsefut WHERE (time BETWEEN '{sdatetime}' AND '{edatetime}')"
+    else:
+        sql = f"SELECT  * FROM candles_1min cm WHERE (time BETWEEN '{sdatetime}' AND '{edatetime}') AND symbol LIKE '%{symbol}%' ORDER by time ASC;"
 
-def fetchCandlesBetweenSingleSymbol(conn, symbol, sdatetime, edatetime,
-                                    candleSize):
-    sql = f"select * FROM candles_{candleSize}min WHERE (time between '{sdatetime}' and '{edatetime}') and symbol like '{symbol}' ORDER by time asc"
-    return pd.read_sql(sql, conn)
+    df = pd.read_sql(text(sql), conn)
+    print(df.head(10))
+    df = libC.CdlConv(df, candleSize)
+    print(df.head(10))
+
+    return df
 
 
 def fetchCandlesOnDate(conn, symbol, date, candleSize):
     sql = f"SELECT * FROM candles_{candleSize}min WHERE symbol LIKE '%%{symbol}%%' AND DATE_TRUNC('day', candle) = '{date}' ORDER BY candle DESC"
-    return pd.read_sql(sql, conn)
+    return pd.read_sql(text(sql), conn)
 
 
 def fetchTicksData(conn, current_date):
@@ -82,8 +95,18 @@ def fetchTicksData(conn, current_date):
     return df
 
 
+def fetchTicks(conn, current_date, table):
+    sql = f"SELECT * FROM {table} WHERE CAST(time AS date) = '{current_date}'"
+    df = pd.read_sql(sql, conn)
+    return df
+
+
 def saveCandles(conn, df):
     df.to_sql('candles_1min', conn, if_exists='append')
+
+
+def saveTicks(conn, df, table):
+    df.to_sql(table, conn, if_exists='append')
 
 
 def saveTradeSignalsToDB(conn, df):
@@ -136,7 +159,5 @@ def createAllTables(conn):
             );
             SELECT create_hypertable('candles_1min', 'time');
             SELECT set_chunk_time_interval('candles_1min', INTERVAL '1 months');
-            ALTER TABLE candles_1min SET (timescaledb.compress, timescaledb.compress_orderby = 'time DESC', timescaledb.compress_segmentby = 'symbol');
-            SELECT add_compression_policy('candles_1min', INTERVAL '1 months');"""
-
+            """
         conn.execute(sqlQuery)
