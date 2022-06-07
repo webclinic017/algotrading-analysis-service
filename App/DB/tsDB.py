@@ -105,24 +105,30 @@ def db_table_exists(conn, tablename):
 
 def readAlgoParams(env, conn, cellValue):
 
-    sql = f"SELECT controls FROM  {env['tbl_usr_strategies']} WHERE  strategy LIKE '{cellValue}%';"
-    ap = pd.read_sql(text(sql), conn)
-    if len(ap) == 0:
+    try:
+        sql = f"SELECT parameters FROM  {env['tbl_usr_strategies']} WHERE  strategy LIKE '{cellValue}%';"
+        ap = pd.read_sql(text(sql), conn)
+        if len(ap) == 0:
+            return None
+
+        ap1 = ap.to_records(index=False)
+        ap2 = ap1[0]['parameters']
+
+        # convert to floats
+        ap2['controls']['target_per'] = float(ap2['controls']['target_per'] /
+                                              100)
+
+        ap2['controls']['stoploss_per'] = float(
+            ap2['controls']['stoploss_per'] / 100)
+        ap2['controls']['deep_stoploss_per'] = float(
+            ap2['controls']['deep_stoploss_per'] / 100)
+
+        ap2['controls']['budget_max_per'] = float(
+            ap2['controls']['budget_max_per'] / 100)
+
+    except Exception as e:
+        print(e)
         return None
-
-    ap1 = ap.to_records(index=False)
-    ap2 = ap1[0]['controls']
-
-    # convert to floats
-    ap2['controls']['target_per'] = float(ap2['controls']['target_per'] / 100)
-
-    ap2['controls']['stoploss_per'] = float(ap2['controls']['stoploss_per'] /
-                                            100)
-    ap2['controls']['deep_stoploss_per'] = float(
-        ap2['controls']['deep_stoploss_per'] / 100)
-
-    ap2['controls']['budget_max_per'] = float(
-        ap2['controls']['budget_max_per'] / 100)
 
     return ap2
 
