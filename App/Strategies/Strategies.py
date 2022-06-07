@@ -3,21 +3,22 @@ import pandas as pd
 
 import App.DB.tsDB as db
 import App.Strategies.S001_ORB_F as S001
-import App.Libraries as lib
+import App.Libraries.lib_results as libr
 
 
-def execute(dbConn, algoID, symbol, date, trading):
+def execute(env, dbConn, algoID, symbol, date, trading):
 
-    summary = pd.DataFrame(columns=lib.lib_results.trade_signal_hl)
-    results = pd.DataFrame(columns=None)
+    summary = pd.DataFrame(columns=libr.trade_signal_hl)
+    results = pd.DataFrame(columns=libr.trade_signal_hl)
+    # results = pd.DataFrame(columns=None)
 
     # 1. Fetch params for algo
-    algoParams = db.readAlgoParams(dbConn, algoID[0:7])
+    algoParams = db.readAlgoParams(env, dbConn, algoID[0:7])
     if algoParams == None:
         return "ERR: No algoParams found for " + algoID[0:7] + " on " + date
 
     # 2. Fetch candles
-    cdl = db.getCdlBtwnTime(dbConn, symbol, date, ["09:00", "09:31"], "1")
+    cdl = db.getCdlBtwnTime(env, dbConn, symbol, date, ["09:00", "09:31"], "1")
     if len(cdl) == 0:
         return "ERR: No candles found for " + symbol + " on " + date
 
@@ -35,7 +36,6 @@ def execute(dbConn, algoID, symbol, date, trading):
             else:
                 S001.S001_ORB_exit(algoID, symbol, rslt_df, date, algoParams,
                                    results)
-
             summary = summary.append(results)
 
         if trading:

@@ -6,7 +6,6 @@ from App.Strategies import Strategies
 from App.Engine import Engines
 from App.Services import Services
 from App.DB import tsDB
-import pandas as pd
 
 
 class Item(BaseModel):
@@ -15,8 +14,9 @@ class Item(BaseModel):
     is_offer: Optional[bool] = None
 
 
+env = tsDB.envVar()
 app = FastAPI()
-dbConn = tsDB.dbConnect()
+dbConn = tsDB.dbConnect(env)
 tsDB.createAllTables(dbConn)
 
 
@@ -30,23 +30,23 @@ def read_root():
 
 @app.get("/services/")
 def read_item(sid: str, date: Optional[str] = None):
-    return Services.execute(dbConn, sid, date)
+    return Services.execute(env, dbConn, sid, date)
 
 
 @app.get("/tradesignals/")
 def read_item(algo: str, symbol: str, date: str):
-    return Strategies.execute(dbConn, algo, symbol, date, True)
+    return Strategies.execute(env, dbConn, algo, symbol, date, True)
 
 
 @app.get("/simulation/")
 def read_item(algo: str, symbol: str, startdate: str, enddate: str):
-    ret = Strategies.execute(algo)
+    ret = Strategies.execute(env, algo)
     return {"signals": ret}
 
 
 @app.get("/active-trades/")
 def read_item(algo: str, symbol: str, startdate: str, enddate: str):
-    ret = Engines.execute(dbConn, algo)
+    ret = Engines.execute(env, dbConn, algo)
     return {"signals": ret}
 
 
