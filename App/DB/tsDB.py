@@ -53,33 +53,49 @@ def db_table_exists(conn, tablename):
     return bool(len(results_df))
 
 
-def readAlgoParamsJson(conn, cellValue):
+def readAlgoParams(conn, cellValue):
 
-    sql = f"SELECT  * FROM  paragvb_strategies_test WHERE  strategy LIKE '{cellValue}%';"
-    return pd.read_sql(text(sql), conn)
-    # if len(df):
-    # df2 = json_normalize(df.iloc[0]['controls'])
-    # df_merged = pd.concat([df, df2], axis=1)
-    # df_merged.to_dict('records')
-    # return df_merged
-    # else:
-    #     return
+    sql = f"SELECT controls FROM  paragvb_strategies WHERE  strategy LIKE '{cellValue}%';"
+    ap = pd.read_sql(text(sql), conn)
+    if len(ap) == 0:
+        return None
+
+    ap1 = ap.to_records(index=False)
+    ap2 = ap1[0]['controls']
+
+    # convert to floats
+    ap2['controls']['target_per'] = float(ap2['controls']['target_per'] / 100)
+
+    ap2['controls']['stoploss_per'] = float(ap2['controls']['stoploss_per'] /
+                                            100)
+    ap2['controls']['deep_stoploss_per'] = float(
+        ap2['controls']['deep_stoploss_per'] / 100)
+
+    ap2['controls']['budget_max_per'] = float(
+        ap2['controls']['budget_max_per'] / 100)
+
+    return ap2
 
 
-def getCdlBtwnTime(conn, symbol, sdatetime, edatetime, candleSize):
+def getCdlBtwnTime(conn, symbol, date, timeRange, candleSize):
     # print(datetime.today().date())
-    date_time_obj = datetime.strptime(edatetime, '%Y-%m-%d %H:%M')
+    date_time_obj = datetime.strptime(date, '%Y-%m-%d')
     # print(date_time_obj.date())
 
-    if date_time_obj.date() == datetime.today().date():
-        sql = f"SELECT  * FROM ticks_stk WHERE (time BETWEEN '{sdatetime}' AND '{edatetime}') UNION ALL SELECT * FROM ticks_nsefut WHERE (time BETWEEN '{sdatetime}' AND '{edatetime}')"
-    else:
-        sql = f"SELECT  * FROM candles_1min cm WHERE (time BETWEEN '{sdatetime}' AND '{edatetime}') AND symbol LIKE '%{symbol}%' ORDER by time ASC;"
+    startDT = date + ' ' + timeRange[0]
+    endDT = date + ' ' + timeRange[1]
 
-    df = pd.read_sql(text(sql), conn)
-    print(df.head(10))
-    df = libC.CdlConv(df, candleSize)
-    print(df.head(10))
+    if date_time_obj.date() == datetime.today().date():
+        sql = f"SELECT  * FROM ticks_nsestk WHERE ((time BETWEEN '{startDT}' AND '{endDT}') AND symbol LIKE '%{symbol}%') UNION ALL SELECT * FROM ticks_nsefut WHERE ((time BETWEEN '{startDT}' AND '{endDT}')  AND symbol LIKE '%{symbol}%')"
+        df = pd.read_sql(text(sql), conn)
+        df = libC.TickToCdl(df, date, str(candleSize) + "T")
+
+    else:
+        sql = f"SELECT  * FROM candles_1min cm WHERE (time BETWEEN '{startDT}' AND '{endDT}') AND symbol LIKE '%{symbol}%' ORDER by time ASC;"
+        df = pd.read_sql(text(sql), conn)
+        df = libC.CdlConv(df, candleSize + "T")
+
+    # print(df.head(30))
 
     return df
 

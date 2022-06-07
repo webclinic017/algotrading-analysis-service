@@ -35,7 +35,7 @@ def read_item(sid: str, date: Optional[str] = None):
 
 @app.get("/tradesignals/")
 def read_item(algo: str, symbol: str, date: str):
-    return Strategies.execute(dbConn, algo, symbol, date, True, True)
+    return Strategies.execute(dbConn, algo, symbol, date, True)
 
 
 @app.get("/simulation/")

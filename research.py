@@ -11,12 +11,13 @@ dbConn = db.dbConnect()
 algo = "S001-01-ORB-OpeningRangeBreakout"
 symbol = "BANKNIFTY-FUT"
 # date = "2022-05-20"
-date = "2022-06-06"
+# date = "2022-05-31"
+date = "2022-06-07"
 
-df = s.execute(dbConn, algo + '-entr', symbol, date, False,
+df = s.execute(dbConn, algo + '-entr', symbol, date,
                False)  # get all entry calls
 print(df)
 
-df = s.execute(dbConn, algo + '-exit', symbol, date, False,
+df = s.execute(dbConn, algo + '-exit', symbol, date,
                False)  # get all entry calls
 print(df)

@@ -6,19 +6,20 @@ import App.Strategies.S001_ORB_F as S001
 import App.Libraries as lib
 
 
-def execute(dbConn, algoID, symbol, date, ticks, trading):
+def execute(dbConn, algoID, symbol, date, trading):
 
-    summary = pd.DataFrame(columns=lib.lib_results.trade_signal_header_list)
-    results = pd.DataFrame(columns=lib.lib_results.trade_signal_header_list)
+    summary = pd.DataFrame(columns=lib.lib_results.trade_signal_hl)
+    results = pd.DataFrame(columns=None)
 
     # 1. Fetch params for algo
-    algoParams = db.readAlgoParamsJson(dbConn, algoID[0:7])
+    algoParams = db.readAlgoParams(dbConn, algoID[0:7])
+    if algoParams == None:
+        return "ERR: No algoParams found for " + algoID[0:7] + " on " + date
 
     # 2. Fetch candles
-    cdl = db.getCdlBtwnTime(dbConn, symbol, date + " 09:00", date + " 09:31",
-                            "1")
+    cdl = db.getCdlBtwnTime(dbConn, symbol, date, ["09:00", "09:31"], "1")
     if len(cdl) == 0:
-        return "No candles found for " + symbol + " on " + date
+        return "ERR: No candles found for " + symbol + " on " + date
 
     sym = cdl.symbol.unique()
 
@@ -27,8 +28,7 @@ def execute(dbConn, algoID, symbol, date, ticks, trading):
     if baseAlgo == "S001":
         for x in range(len(sym)):
             rslt_df = cdl[cdl['symbol'] == sym[x]]
-            # print(sym[x])
-            rslt_df.set_index('time', inplace=True)
+            # rslt_df.set_index('time', inplace=True)
             if '-entr' in algoID:
                 S001.S001_ORB_entr(algoID, symbol, rslt_df, date, algoParams,
                                    results)
@@ -36,12 +36,7 @@ def execute(dbConn, algoID, symbol, date, ticks, trading):
                 S001.S001_ORB_exit(algoID, symbol, rslt_df, date, algoParams,
                                    results)
 
-            if trading:
-                if (results.at[0, "dir"] == "Bullish") or \
-                    (results.at[0, "dir"] == "Bearish"):
-                    summary = summary.append(results)
-            else:
-                summary = summary.append(results)
+            summary = summary.append(results)
 
         if trading:
             json_str = summary.to_json(orient="records")

@@ -1,4 +1,4 @@
-trade_signal_header_list = [
+trade_signal_hl = [
     'status',
     'id',
     'date',
@@ -9,3 +9,7 @@ trade_signal_header_list = [
     'target',
     'stoploss',
 ]
+
+candles_hl = ['Date', 'DateStr','TimeStr' ,\
+                   'Open', 'High', 'Low', 'Close', \
+                   'Null1', 'Null2', 'Null3', 'Null4']

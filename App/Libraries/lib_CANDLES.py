@@ -1,3 +1,6 @@
+import App.Libraries as lib
+
+
 ##########################################################################
 #                    Filter specific candle
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -24,21 +27,51 @@ def convertCandleSize(selectedDate, dataDF, cdlSize):
 
 
 # import datetime
+from numpy import append
 import pandas as pd
 from glob import iglob
+
+ohlc_dict = {
+    'open': 'first',
+    'high': 'max',
+    'low': 'min',
+    'close': 'last',
+    'symbol': 'first',
+    'volume': 'sum',
+    'buy_demand': 'median',
+    'sell_demand': 'median',
+    'open_interest': 'median'
+}
 
 
 def CdlConv(df, freq):
 
     df['time'] = pd.to_datetime(df['time'])
     df = df.set_index('time')
+    summary = pd.DataFrame(columns=None)
 
     # get unique symbols
     symlist = df.symbol.unique()
 
     for x in symlist:
         df1 = df[df['symbol'] == x]
-        df1.to_csv("check-org.csv")
+        df1 = df1.resample(freq, closed='left', label='left').apply(ohlc_dict)
+        summary = summary.append(df1)
+
+    return summary
+
+
+def TickToCdl(df, date, freq):
+
+    df['time'] = pd.to_datetime(df['time'])
+    df = df.set_index('time')
+    dfCdl = pd.DataFrame(columns=None)
+
+    # get unique symbols
+    symlist = df.symbol.unique()
+
+    for x in symlist:
+        df1 = df[df['symbol'] == x]
 
         # ohlc
         dfmerged = df1['last_traded_price'].resample(freq).ohlc()
@@ -57,5 +90,7 @@ def CdlConv(df, freq):
 
         # symbol
         dfmerged['symbol'] = x
-        # dfmerged.drop(['trades_till_now'], axis=1, inplace=True)
-    return dfmerged
+
+        dfCdl = dfCdl.append(dfmerged)
+
+    return dfCdl
