@@ -1,46 +1,53 @@
 from App.DB import tsDB
+import App.Libraries.lib_CANDLES as libCdl
 # import datetime
 import pandas as pd
 from glob import iglob
+import App.DB.tsDB as db
+import os
+import sys
 
 
-def CreateCandlesInDb(dbconn, date, freq):
+# Function works if called on next day,
+# if called on same day, getCdlBtwnTime --> provdies ticks data - causing failure
+# calling next day, reads form 1min table --> provide null data if candles not present
+def CreateCandlesInDb(env, dbconn, date):
 
-    df = tsDB.fetchTicksData(dbconn, date)
-    df['time'] = pd.to_datetime(df['time'])
-    df = df.set_index('time')
+    dict = {'result': 'ok', 'error': 'nil'}
 
-    # get unique symbols
-    symlist = df.symbol.unique()
+    #  function return ticks if called on same day as
+    cdl = db.getCdlBtwnTime(env, dbconn, "", date, ["09:00", "16:00"], "1")
+    if len(cdl) > 0:
+        dict['result'] = 'fail'
+        dict[
+            'error'] = 'Candles are present in table for ' + date + ', skipping operation'
+        return dict
 
-    for x in symlist:
-        df1 = df[df['symbol'] == x]
-        df1.to_csv("check-org.csv")
+    df = tsDB.fetchTicksData(env, dbconn, date)
+    if len(df) == 0:
+        dict['result'] = 'fail'
+        dict['error'] = 'No ticks found for ' + date
+        return dict
 
-        # ohlc
-        dfmerged = df1['last_traded_price'].resample(freq).ohlc()
+    df = libCdl.TickToCdl(df, date, '1T')
 
-        # volume
-        dfmerged['volume'] = df1['trades_till_now'].resample(
-            '1T').last() - df1['trades_till_now'].resample(freq).first()
+    tsDB.updateTable(dbconn, 'candles_1min', df)
 
-        # buy_demand & sell_demand
-        dfmerged['buy_demand'] = df1['buy_demand'].resample(freq).median()
-        dfmerged['sell_demand'] = df1['sell_demand'].resample(freq).median()
+    script_dir = os.path.abspath(os.path.dirname(sys.argv[0]) or '.')
+    csvPath = script_dir + '/Data/CandleConverter/'
 
-        # open_interest
-        dfmerged['open_interest'] = df1['open_interest'].resample(
-            freq).median()
+    dfFut = df[df['symbol'].str.contains("-FUT") == True]
+    f = csvPath + date + ' ( Symbols ' + str(len(
+        dfFut.symbol.unique())) + ' - Rows ' + str(len(dfFut)) + ' ).csv'
 
-        # symbol
-        dfmerged['symbol'] = x
-        # dfmerged.drop(['trades_till_now'], axis=1, inplace=True)
+    dfFut.to_csv(f, index=True)
+    dict['ticks_nsefut'] = f.replace(csvPath, '')
 
-        dfmerged.to_csv("check.csv")
+    dfStk = df[df['symbol'].str.contains("-FUT") == False]
+    f = csvPath + date + ' ( Symbols ' + str(len(
+        dfStk.symbol.unique())) + ' - Rows ' + str(len(dfStk)) + ' ).csv'
 
-        # write to DB
-        tsDB.saveCandles(dbconn, dfmerged)
+    dfStk.to_csv(f, index=True)
+    dict['ticks_nsestk'] = f.replace(csvPath, '')
 
-
-# TODO: Offline data check for generated data required by
-# TODO: Candle check in tick_ db and this db to be checked
+    return dict

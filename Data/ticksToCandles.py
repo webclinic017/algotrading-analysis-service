@@ -9,7 +9,7 @@ SUB_PATH_FUT = '/1min_nsefut/'
 SUB_PATH_STK = '/1min_nsestk/'
 
 
-def CreateCandlesInDb(dbconn, date, freq, db_name):
+def lcl_CreateCandlesInDb(dbconn, date, freq, db_name):
 
     sql = f"SELECT * FROM {db_name}  WHERE time LIKE '{date}%';"
     df = pd.read_sql(text(sql), conn)
@@ -58,8 +58,8 @@ sql = f"SELECT DISTINCT(DATE(time)) FROM ticks_nsestk_lcl;"
 dfDates = pd.read_sql(text(sql), conn)
 
 for x in range(len(dfDates)):
-    df, symCnt, rows = CreateCandlesInDb(conn, dfDates.iloc[x]['date'], '1T',
-                                         'ticks_nsestk_lcl')
+    df, symCnt, rows = lcl_CreateCandlesInDb(conn, dfDates.iloc[x]['date'],
+                                             '1T', 'ticks_nsestk_lcl')
     f = BASE_PATH + SUB_PATH_STK + str(
         dfDates.iloc[x]['date']) + ' ( Symbols ' + str(
             symCnt) + ' - Rows ' + str(rows) + ' ).csv'
@@ -69,8 +69,8 @@ sql = f"SELECT DISTINCT(DATE(time)) FROM ticks_nsefut_lcl;"
 dfDates = pd.read_sql(text(sql), conn)
 
 for x in range(len(dfDates)):
-    df, symCnt, rows = CreateCandlesInDb(conn, dfDates.iloc[x]['date'], '1T',
-                                         'ticks_nsefut_lcl')
+    df, symCnt, rows = lcl_CreateCandlesInDb(conn, dfDates.iloc[x]['date'],
+                                             '1T', 'ticks_nsefut_lcl')
     f = BASE_PATH + SUB_PATH_FUT + str(
         dfDates.iloc[x]['date']) + ' ( Symbols ' + str(
             symCnt) + ' - Rows ' + str(rows) + ' ).csv'

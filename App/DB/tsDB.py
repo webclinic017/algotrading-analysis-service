@@ -167,18 +167,14 @@ def fetchTicks(conn, current_date, table):
     return df
 
 
-def saveCandles(conn, df):
-    df.to_sql('candles_1min', conn, if_exists='append')
-
-
-def saveTicks(conn, df, table):
+def updateTable(conn, table, df):
     df.to_sql(table, conn, if_exists='append')
 
 
 # drop table if exists, then create table and insert data
 def saveInstrumentsToDB(env, conn, df):
     if (db_table_exists(conn, env['tbl_instruments'])) == True:
-        sql = f"DROP TABLE {env['tbl_instruments']}"
+        sql = f"DROP TABLE {env['tbl_instruments']};"
         conn.execute(sql)
 
     sqlQuery = """CREATE TABLE """ + env['tbl_instruments'] + """ (
@@ -197,10 +193,6 @@ def saveInstrumentsToDB(env, conn, df):
                     );"""
     conn.execute(sqlQuery)
     df.to_sql(env['tbl_instruments'], conn, if_exists='replace', index=False)
-
-
-def saveDataFrameToDB(env, conn, df):
-    df.to_sql(env['tbl_instruments'], conn, if_exists='append', index=False)
 
 
 def createAllTables(conn):
