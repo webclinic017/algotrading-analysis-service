@@ -1,4 +1,5 @@
 import App.Libraries as lib
+import pandas as pd
 
 
 ##########################################################################
@@ -11,25 +12,6 @@ def getTimeCandle(Xdf, Xcol, Xtime):
     # print(Xdf.at[Xtime, Xcol][0])
     return Xdf.at[Xtime, Xcol][0]
 
-
-##########################################################################
-#                    Resample candle from 1Min to xMin
-# Function - if candle before 9:15 copy to next and generate candles
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Arg: Input DF, Sample period
-# Ret: DF
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-def convertCandleSize(selectedDate, dataDF, cdlSize):
-
-    from App.DB import tsDB
-
-
-# import datetime
-from numpy import append
-import pandas as pd
-from glob import iglob
 
 ohlc_dict = {
     'open': 'first',

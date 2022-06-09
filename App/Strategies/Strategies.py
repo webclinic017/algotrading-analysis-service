@@ -3,7 +3,7 @@ import pandas as pd
 
 import App.DB.tsDB as db
 import App.Strategies.S001_ORB_F as S001
-import App.Libraries.lib_results as libr
+import App.Libraries.lib_STRUCTS as libr
 
 
 def execute(env, dbConn, algoID, symbol, date, trading):

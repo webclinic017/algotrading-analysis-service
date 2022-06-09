@@ -11,7 +11,7 @@ import sys
 # Function works if called on next day,
 # if called on same day, getCdlBtwnTime --> provdies ticks data - causing failure
 # calling next day, reads form 1min table --> provide null data if candles not present
-def CreateCandlesInDb(env, dbconn, date):
+def Create1MinCandlesInDb(env, dbconn, date):
 
     dict = {'result': 'ok', 'error': 'nil'}
 
