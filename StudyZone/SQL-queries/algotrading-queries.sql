@@ -64,6 +64,12 @@ SELECT * FROM ticks t  WHERE "time" LIKE '2022-01-18%' AND symbol LIKE '%-IDX';
 SELECT * FROM ticks_nsefut_zip_lcl t WHERE DATE(time) = '2015-06-29';
 
 
+-- ##################################################################  fetch all dates
+
+SELECT DISTINCT DATE_TRUNC('day', time) AS dates FROM candles_1min cm ORDER BY dates DESC;  -- ALL dates
+
+SELECT DISTINCT DATE_TRUNC('day', time) AS dates FROM candles_1min cm WHERE CAST(time AS date)  BETWEEN  '2022-05-26' AND '2022-05-31' ORDER BY dates DESC; -- dates BETWEEN range
+
 -- ##################################################################  view tick count for each day
 SELECT
     DATE_TRUNC('day', "time") AS "day", 

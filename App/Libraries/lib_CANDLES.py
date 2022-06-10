@@ -28,17 +28,24 @@ ohlc_dict = {
 
 def CdlConv(df, freq):
 
-    df['time'] = pd.to_datetime(df['time'])
-    df = df.set_index('time')
-    summary = pd.DataFrame(columns=None)
+    try:
 
-    # get unique symbols
-    symlist = df.symbol.unique()
+        df['time'] = pd.to_datetime(df['time'])
+        df = df.set_index('time')
+        summary = pd.DataFrame(columns=None)
 
-    for x in symlist:
-        df1 = df[df['symbol'] == x]
-        df1 = df1.resample(freq, closed='left', label='left').apply(ohlc_dict)
-        summary = summary.append(df1)
+        # get unique symbols
+        symlist = df.symbol.unique()
+
+        for x in symlist:
+            df1 = df[df['symbol'] == x]
+            df1 = df1.resample(freq, closed='left',
+                               label='left').apply(ohlc_dict)
+            summary = summary.append(df1)
+
+    except Exception as e:
+        # print(e)
+        summary = pd.DataFrame(columns=None)
 
     return summary
 

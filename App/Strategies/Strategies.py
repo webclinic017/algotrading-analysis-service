@@ -15,12 +15,17 @@ def execute(env, dbConn, algoID, symbol, date, trading):
     # 1. Fetch params for algo
     algoParams = db.readAlgoParams(env, dbConn, algoID[0:7])
     if algoParams == None:
-        return "ERR: No algoParams found for " + algoID[0:7] + " on " + date
+        summary.at[0, "status"] = "ERR: No algoParams found for " + algoID[
+            0:7] + " on " + date
+        return returnValues(summary, trading)
 
     # 2. Fetch candles
     cdl = db.getCdlBtwnTime(env, dbConn, symbol, date, ["09:00", "09:31"], "1")
     if len(cdl) == 0:
-        return "ERR: No candles found for " + symbol + " on " + date
+        summary.at[
+            0,
+            "status"] = "ERR: No candles found for " + symbol + " on " + date
+        return returnValues(summary, trading)
 
     sym = cdl.symbol.unique()
 
@@ -38,12 +43,7 @@ def execute(env, dbConn, algoID, symbol, date, trading):
                                    results)
             summary = summary.append(results)
 
-        if trading:
-            json_str = summary.to_json(orient="records")
-            parsed = json.loads(json_str)
-            return parsed  # return JSON data - API caller
-        else:
-            return summary  # return DF data - Researcher caller
+        return returnValues(summary, trading)
 
     elif baseAlgo == "S999":
         s.S999_TEST(algo, symbol, cdl, date, algoParams, results)
@@ -54,3 +54,12 @@ def execute(env, dbConn, algoID, symbol, date, trading):
 
     else:
         return "No Algo Found"
+
+
+def returnValues(summary, trading):
+    if trading:
+        json_str = summary.to_json(orient="records")
+        parsed = json.loads(json_str)
+        return parsed  # return JSON data - API caller
+    else:
+        return summary  # return DF data - Researcher caller

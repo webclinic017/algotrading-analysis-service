@@ -91,6 +91,16 @@ def dbConnect(env):  # connect to database
     return sqlalchemy.create_engine(db_url)
 
 
+def get_dates_list(conn, date_start, date_end):
+    sql = f"SELECT DISTINCT DATE_TRUNC('day', time) AS dates FROM candles_1min WHERE CAST(time AS date) BETWEEN '{date_start}' AND '{date_end}' ORDER BY dates DESC"
+
+    if date_start == "" or date_end == "":
+        sql = f"SELECT DISTINCT DATE_TRUNC('day', time) AS dates FROM candles_1min ORDER BY dates DESC"
+
+    df = pd.read_sql(text(sql), conn)
+    return df['dates'].astype(str).tolist()
+
+
 def db_table_exists(conn, tablename):
     # thanks to Peter Hansen's answer for this sql
 
