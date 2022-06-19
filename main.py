@@ -1,3 +1,4 @@
+from asyncio import constants
 import uvicorn
 from fastapi import FastAPI
 from typing import Optional
@@ -6,6 +7,8 @@ from App.Strategies import Strategies
 from App.Engine import Engines
 from App.Services import Services
 from App.DB import tsDB
+
+LIVE_TRADING = True
 
 
 class Item(BaseModel):
@@ -34,8 +37,17 @@ def read_item(sid: str, date: Optional[str] = None):
 
 
 @app.get("/tradesignals/")
-def read_item(algo: str, symbol: str, date: str):
-    return Strategies.execute(env, dbConn, algo, symbol, date, True)
+def read_item(
+    mode: str,
+    algo: str,
+    symbol: str,
+    date: str,
+    pos_dir: Optional[str] = None,
+    pos_entr_price: Optional[float] = None,
+    pos_entr_time: Optional[str] = None,
+):
+    return Strategies.execute(env, dbConn, mode, algo, symbol, date,
+                              pos_entr_price, pos_entr_time, LIVE_TRADING)
 
 
 @app.get("/simulation/")

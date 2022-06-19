@@ -80,4 +80,21 @@ def generate_stock_report():
     print(report_table)
 
 
-generate_stock_report()
+# generate_stock_report()
+
+# def recordExtremes(dayDF, selectedDate, strategy):
+
+#     max_index = dayDF["Close"].idxmax()
+#     min_index = dayDF["Close"].idxmin()
+
+#     strategy.at[0, 'SMax'] = dayDF.at[max_index, 'Close']
+#     strategy.at[0, 'SMaxTime'] = pd.to_datetime(max_index).time().strftime(
+#         "%H:%M")
+#     strategy.at[0, 'SMaxD'] = strategy.at[0, 'SMax'] - strategy.at[0, 'Entry']
+
+#     strategy.at[0, 'SMin'] = dayDF.at[min_index, 'Close']
+#     strategy.at[0, 'SMinTime'] = pd.to_datetime(min_index).time().strftime(
+#         "%H:%M")
+#     strategy.at[0, 'SMinD'] = strategy.at[0, 'Entry'] - strategy.at[0, 'SMin']
+
+#     return

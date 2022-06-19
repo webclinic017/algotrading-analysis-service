@@ -6,7 +6,8 @@ import App.Strategies.S001_ORB_F as S001
 import App.Libraries.lib_STRUCTS as libr
 
 
-def execute(env, dbConn, algoID, symbol, date, trading):
+def execute(env, dbConn, mode, algoID, symbol, date, pos_dir, pos_entr_price,
+            pos_entr_time, trading):
 
     summary = pd.DataFrame(columns=libr.trade_signal_hl)
     results = pd.DataFrame(columns=libr.trade_signal_hl)
@@ -20,7 +21,7 @@ def execute(env, dbConn, algoID, symbol, date, trading):
         return returnValues(summary, trading)
 
     # 2. Fetch candles
-    cdl = db.getCdlBtwnTime(env, dbConn, symbol, date, ["09:00", "09:31"], "1")
+    cdl = db.getCdlBtwnTime(env, dbConn, symbol, date, ["09:00", "16:00"], "1")
     if len(cdl) == 0:
         summary.at[
             0,
@@ -33,14 +34,12 @@ def execute(env, dbConn, algoID, symbol, date, trading):
     baseAlgo = algoID[0:4]
     if baseAlgo == "S001":
         for x in range(len(sym)):
+
             rslt_df = cdl[cdl['symbol'] == sym[x]]
-            # rslt_df.set_index('time', inplace=True)
-            if '-entr' in algoID:
-                S001.S001_ORB_entr(algoID, symbol, rslt_df, date, algoParams,
-                                   results)
-            else:
-                S001.S001_ORB_exit(algoID, symbol, rslt_df, date, algoParams,
-                                   results)
+
+            S001.S001_ORB(algoID, mode, symbol, rslt_df, date, algoParams,
+                          pos_dir, pos_entr_price, pos_entr_time, results)
+
             summary = summary.append(results)
 
         return returnValues(summary, trading)

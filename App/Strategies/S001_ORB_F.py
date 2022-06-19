@@ -11,11 +11,12 @@
 # Subscription services - Stall/Direction from position
 # ----------------------------------------------------------------
 
-from datetime import datetime
+from datetime import datetime, timedelta
+
 import App.Libraries.lib_FN as libFn
+import App.Libraries.lib_CANDLES as libCdl
 
 ENTRY_GAP_DELTA_PERCENTAGE = 0
-
 
 #  algo inputs
 # --------------
@@ -24,7 +25,23 @@ ENTRY_GAP_DELTA_PERCENTAGE = 0
 #  symbol = "BANKNIFTY"
 #  date = "2022-01-25"
 #
-def S001_ORB_entr(algo, symbol, df, date, algoParams, results):
+
+
+def S001_ORB(algoID, mode, symbol, df, date, algoParams, pos_dir,
+             pos_entr_price, pos_entr_time, results):
+
+    if mode == "entr":
+        S001_ORB_entr(algoID, symbol, df, date, algoParams, results)
+    elif mode == "exit":
+        S001_ORB_exit(algoID, symbol, df, date, algoParams, pos_dir,
+                      pos_entr_price, pos_entr_time, results)
+    else:
+        results.at[0, "status"] = "ERR: Invalid mode " + mode
+
+    return results
+
+
+def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
 
     try:
 
@@ -36,7 +53,7 @@ def S001_ORB_entr(algo, symbol, df, date, algoParams, results):
         else:
             timeStamp = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
-        results.at[0, "strategy"] = algo
+        results.at[0, "strategy"] = algoID
         results.at[0, "date"] = timeStamp
 
         results.at[0, "status"] = "signal-processed"
@@ -98,21 +115,106 @@ def S001_ORB_entr(algo, symbol, df, date, algoParams, results):
         return results
 
 
-def S001_ORB_exit(algo, symbol, df, date, algoParams, results):
-    return ""
+def S001_ORB_exit(algoID, symbol, df, date, algoParams, pos_dir,
+                  pos_entr_price, pos_entr_time, results):
 
-    #   <th>strategy</th>
-    #   <th>enabled</th>
-    #   <th>engine</th>
-    #   <th>trigger_time</th>
-    #   <th>trigger_days</th>
-    #   <th>cdl_size</th>
-    #   <th>instruments</th>
-    #   <th>controls</th>
-    #   <th>percentages.target</th>
-    #   <th>percentages.sl</th>
-    #   <th>percentages.deepsl</th>
-    #   <th>target-controls.trail_target_en</th>
-    #   <th>target-controls.position_reversal_en</th>
-    #   <th>target-controls.delayed_stoploss_min</th>
-    #   <th>target-controls.stall_detect_period_min</th>
+    pPositionReversal = algoParams["controls"]["position_reversal_en"]
+    s001_sentiment_analyser(df, pos_entr_time, pos_entr_price)
+
+    # -------------------------------- sl & target --------------------------------
+    sl = (algoParams["controls"]["stoploss_per"] / 100) * pos_entr_price
+    target = (algoParams["controls"]["target_per"] / 100) * pos_entr_price
+
+    # -------------------------------- filter cdl --------------------------------
+    dly_sl = algoParams["controls"]["delayed_stoploss_seconds"]
+    posentr = datetime.strptime(pos_entr_time, "%Y-%m-%d %H:%M:%S")
+
+    if dly_sl != 0:
+        start_time = posentr + timedelta(seconds=dly_sl)
+        end_time = start_time.replace(hour=15, minute=31, second=0)
+    else:
+        start_time = pos_entr_time
+        end_time = start_time.replace(hour=15, minute=31, second=0)
+
+    active_cdls = libCdl.get_active_cdl(
+        df, start_time.strftime("%Y-%m-%d %H:%M:%S"),
+        end_time.strftime("%Y-%m-%d %H:%M:%S"))
+
+    if pos_dir.lower() == "bullish":
+
+        for index, row in df.iterrows():
+
+            # trail_target_mper
+            # trail_sl_mper
+
+            if row['close'] > pos_entr_price:
+                # cal new sl and target trail values
+
+            if row['close'] > pos_entr_price + target:  # target hit
+                results.at[0, "exit_time"] = index
+                results.at[0, "exit"] = row['close']
+                results.at[0, "exit_reason"] = "target"
+                results.at[0, "status"] = "signal-processed"
+                return results
+            elif row['close'] < (pos_entr_price - sl):  # stoploss hit
+                results.at[0, "exit_time"] = index
+                results.at[0, "exit"] = row['close']
+                results.at[0, "exit_reason"] = "sl/deepsl"
+                results.at[0, "status"] = "signal-processed"
+                return results
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Bullish
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # "delayed_stoploss_min": "2018-09-22T23:23:23Z",
+        # "stall_detect_period_min": "2018-09-22T22:22:22Z",
+        # "trail_target_en": true,
+        # "position_reversal_en": true,
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Check for Target acheived
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        pTargetTrail = strategy.at[0, 'TrailTarget']
+
+        Tgtmask = cdlDF['Close'] > (strategy.at[0, 'Target'])
+        tgtDF = cdlDF.loc[Tgtmask]
+        if (len(tgtDF) > 0):
+            idx = tgtDF.index[0]
+            strategy.at[0, 'Exit'] = cdlDF.at[idx, 'Close']
+            strategy.at[0, 'ExitTime'] = idx.time().strftime("%H:%M")
+            strategy.at[0, 'Reason'] = 'Target'
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Bearish
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if pos_dir.lower() == "bearish":
+        tgt_df = df['close'] > pos_entr_price - target
+        sl_df = df['close'] > (pos_entr_price + sl)
+        #print('bearish')
+        #if len(slDF) > 0 :
+        #strategy.at[0, 'Position Exit'] == slDF.at[1, 'Close']
+        #strategy.at[0, 'Position Exit time'] == slDF.at[0, index]
+        #   print(slDF)
+
+        #print(slDF)
+
+        #print('no exits trigerred, check EoD candle')
+        #print('exit', strategy.at[0, 'Exit'])
+        #type(strategy.at[0, 'Exit'])
+
+        results.at[0,
+                   'Result'] = results.at[0, 'Exit'] - results.at[0, 'Entry']
+
+    return results
+
+
+def s001_sentiment_analyser(df, pos_entr_time, pos_entr_price):
+
+    # stall detect period
+    # position reversal period
+
+    #print(period)
+    # 1. count green/red candles. > 50% gives direction
+    # 2. size of green/red determines the force in the direction
+    # 3. Return interpreted status
+
+    return 0
