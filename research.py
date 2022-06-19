@@ -14,7 +14,7 @@ dbConn = db.dbConnect(env)
 
 analysis_algorithm = "S001-01-ORB-OpeningRangeBreakout"
 analysis_symbol = "BANKNIFTY-FUT"
-analysis_duration_backward = '1 year'
+analysis_duration_backward = "1 month"
 analysis_end_date = ""  # "" for today
 
 start, end = libFn.getDates(analysis_duration_backward, analysis_end_date)
@@ -23,10 +23,11 @@ scan_dates = db.get_dates_list(dbConn, start, end)
 
 result = pd.DataFrame(columns=None)
 
-for dt in tqdm(scan_dates, colour='green'):
+for dt in tqdm(scan_dates, colour="green"):
 
-    df = s.execute(env, dbConn, analysis_algorithm + '-entr', analysis_symbol,
-                   dt, False)  # get all entry calls
+    df = s.execute(
+        env, dbConn, analysis_algorithm + "-entr", analysis_symbol, dt, False
+    )  # get all entry calls
     # print(df)
     result = result.append(df)
 
@@ -36,4 +37,6 @@ for dt in tqdm(scan_dates, colour='green'):
 #                dt, False)  # get all entry calls
 # print(df)
 
-libBk.btResultsParser(result, "", debug_image=True)
+libBk.btResultsParser(
+    result, analysis_algorithm, plot=True, duration=analysis_duration_backward
+)

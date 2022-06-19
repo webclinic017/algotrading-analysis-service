@@ -28,7 +28,7 @@ def S001_ORB_entr(algo, symbol, df, date, algoParams, results):
 
     try:
 
-        date_time_obj = datetime.strptime(date, '%Y-%m-%d')
+        date_time_obj = datetime.strptime(date, "%Y-%m-%d")
 
         # Scan date to be used for backtesting, else use current date for real trading
         if date_time_obj.date() != datetime.today().date():
@@ -42,13 +42,13 @@ def S001_ORB_entr(algo, symbol, df, date, algoParams, results):
         results.at[0, "status"] = "signal-processed"
 
         # Get ORB
-        orb_low, orb_high = libFn.getORB(df)
-        # orb_low = df.at[date + ' 09:15:00', 'low']
-        # orb_high = df.at[date + ' 09:15:00', 'high']
+        # orb_low, orb_high = libFn.getORB(df)
+        orb_low = df.at[date + " 09:15:00", "low"]
+        orb_high = df.at[date + " 09:15:00", "high"]
 
-        cdl_926 = df.at[date + ' 09:25:00', 'close']
-        cdl_926open = df.at[date + ' 09:25:00', 'open']
-        cdl_930 = df.at[date + ' 09:30:00', 'close']
+        cdl_926 = df.at[date + " 09:25:00", "close"]
+        cdl_926open = df.at[date + " 09:25:00", "open"]
+        cdl_930 = df.at[date + " 09:30:00", "close"]
         results.at[0, "instr"] = symbol
 
         orbDelta = (abs(orb_high - orb_low) * ENTRY_GAP_DELTA_PERCENTAGE) / 100
@@ -57,7 +57,7 @@ def S001_ORB_entr(algo, symbol, df, date, algoParams, results):
             if cdl_930 > cdl_926open:  # Green candle
                 results.at[0, "dir"] = "Bullish"
                 calVal = cdl_930 + (
-                    (cdl_930 * algoParams['controls']['target_per']) / 100)
+                    (cdl_930 * algoParams["controls"]["target_per"]) / 100)
                 # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams['controls']['deep_stoploss_per'] / 100
                 results.at[0, "target"] = calVal
                 results.at[0, "stoploss"] = cdl_926open
@@ -70,7 +70,7 @@ def S001_ORB_entr(algo, symbol, df, date, algoParams, results):
             if cdl_930 < cdl_926open:  # Red candle
                 results.at[0, "dir"] = "Bearish"
                 results.at[0, "target"] = cdl_930 - (
-                    (cdl_930 * algoParams['controls']['target_per']) / 100)
+                    (cdl_930 * algoParams["controls"]["target_per"]) / 100)
                 results.at[0, "stoploss"] = cdl_926open
                 # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams['controls']['deep_stoploss_per'] / 100
                 results.at[0, "entry"] = cdl_930

@@ -32,3 +32,21 @@ docker rm --force algotrading-analysis-service
 
 ## Version : 0.1.7
 * DB - compression policy updated
+
+
+## Dev Env - Issues
+
+### QT5 issue
+'qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.'
+use the debug - current file, start debug, then switch back to FastAPI/Reseach. it works!
+
+### Virtual ENV
+python3 -m venv env
+python3 -m pip install --upgrade pip
+pip3 --version - Check if refers the env path
+pip3 install --upgrade -r ./requirements.txt
+
+### using env
+command line -> source env/bin/activate                      
+VS COde - Ctrl+Shift+P -> Select python interpreter -> select venv
+
