@@ -119,6 +119,8 @@ def S001_ORB_exit(algoID, symbol, df, date, algoParams, pos_dir,
                   pos_entr_price, pos_entr_time, results):
 
     pPositionReversal = algoParams["controls"]["position_reversal_en"]
+    pTgtTrail = algoParams["controls"]["target_trail_per"]
+    pSlTrail = algoParams["controls"]["stoploss_trail_per"]
     s001_sentiment_analyser(df, pos_entr_time, pos_entr_price)
 
     # -------------------------------- sl & target --------------------------------
@@ -147,7 +149,10 @@ def S001_ORB_exit(algoID, symbol, df, date, algoParams, pos_dir,
             # trail_target_mper
             # trail_sl_mper
 
-            if row['close'] > pos_entr_price:
+            if row['close'] > (pos_entr_price + (pos_entr_price * pTgtTrail)):
+                target = row['close'] + 
+                
+                sl = row['close'] - (row['close'] * pSlTrail)
                 # cal new sl and target trail values
 
             if row['close'] > pos_entr_price + target:  # target hit
