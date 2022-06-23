@@ -100,7 +100,6 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
 
     except Exception as e:
         # print("Data Error", date)
-        print(e)
         results.at[0, "dir"] = "Data Error"
         return results
 
@@ -118,96 +117,124 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
 def S001_ORB_exit(algoID, symbol, df, date, algoParams, pos_dir,
                   pos_entr_price, pos_entr_time, results):
 
-    pPositionReversal = algoParams["controls"]["position_reversal_en"]
-    pTgtTrail = algoParams["controls"]["target_trail_per"]
-    pSlTrail = algoParams["controls"]["stoploss_trail_per"]
     s001_sentiment_analyser(df, pos_entr_time, pos_entr_price)
 
-    # -------------------------------- sl & target --------------------------------
-    sl = (algoParams["controls"]["stoploss_per"] / 100) * pos_entr_price
-    target = (algoParams["controls"]["target_per"] / 100) * pos_entr_price
+    # --------------------------------------------------------------------- sl & target
+    stls = (algoParams["controls"]["stoploss_per"]) * pos_entr_price
+    tgt = (algoParams["controls"]["target_per"]) * pos_entr_price
 
-    # -------------------------------- filter cdl --------------------------------
+    # --------------------------------------------------------------------- filter cdl (with delayed sl)
     dly_sl = algoParams["controls"]["delayed_stoploss_seconds"]
     posentr = datetime.strptime(pos_entr_time, "%Y-%m-%d %H:%M:%S")
 
     if dly_sl != 0:
         start_time = posentr + timedelta(seconds=dly_sl)
-        end_time = start_time.replace(hour=15, minute=31, second=0)
     else:
-        start_time = pos_entr_time
-        end_time = start_time.replace(hour=15, minute=31, second=0)
+        start_time = posentr
+    end_time = start_time.replace(hour=15, minute=16, second=0)
 
-    active_cdls = libCdl.get_active_cdl(
+    active_cdls = libCdl.filterCandles(
         df, start_time.strftime("%Y-%m-%d %H:%M:%S"),
         end_time.strftime("%Y-%m-%d %H:%M:%S"))
 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Bullish
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if pos_dir.lower() == "bullish":
+        # ------------------------------------------------------------------------- scan all candles
+        for index, row in active_cdls.iterrows():
 
-        for index, row in df.iterrows():
+            # print(row)
+            # --------------------------------------------------------------------- trail calculations
+            if row['close'] > pos_entr_price:  # ---------------------------------- if price moved in direction
+                movment = row['close'] - pos_entr_price
+            else:
+                movment = 0
 
-            # trail_target_mper
-            # trail_sl_mper
+            if algoParams['controls']['target_trail_enabled']:
+                target = (pos_entr_price + movment) + tgt
 
-            if row['close'] > (pos_entr_price + (pos_entr_price * pTgtTrail)):
-                target = row['close'] + 
-                
-                sl = row['close'] - (row['close'] * pSlTrail)
-                # cal new sl and target trail values
+            if algoParams['controls']['stoploss_trail_enabled']:
+                sl = (pos_entr_price + movment) - stls
 
-            if row['close'] > pos_entr_price + target:  # target hit
+            if row['close'] > pos_entr_price + target:  # ------------------------- target hit
                 results.at[0, "exit_time"] = index
                 results.at[0, "exit"] = row['close']
                 results.at[0, "exit_reason"] = "target"
                 results.at[0, "status"] = "signal-processed"
                 return results
-            elif row['close'] < (pos_entr_price - sl):  # stoploss hit
+
+            elif row['close'] < (pos_entr_price - sl):  # -------- stoploss hit
                 results.at[0, "exit_time"] = index
                 results.at[0, "exit"] = row['close']
                 results.at[0, "exit_reason"] = "sl/deepsl"
                 results.at[0, "status"] = "signal-processed"
                 return results
 
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # Bullish
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # "delayed_stoploss_min": "2018-09-22T23:23:23Z",
-        # "stall_detect_period_min": "2018-09-22T22:22:22Z",
-        # "trail_target_en": true,
-        # "position_reversal_en": true,
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # Check for Target acheived
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        pTargetTrail = strategy.at[0, 'TrailTarget']
+        start_time = posentr.replace(hour=15, minute=16, second=0)
+        end_time = posentr.replace(hour=15, minute=31, second=0)
 
-        Tgtmask = cdlDF['Close'] > (strategy.at[0, 'Target'])
-        tgtDF = cdlDF.loc[Tgtmask]
-        if (len(tgtDF) > 0):
-            idx = tgtDF.index[0]
-            strategy.at[0, 'Exit'] = cdlDF.at[idx, 'Close']
-            strategy.at[0, 'ExitTime'] = idx.time().strftime("%H:%M")
-            strategy.at[0, 'Reason'] = 'Target'
+        eod_cdls = libCdl.filterCandles(
+            df, start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            end_time.strftime("%Y-%m-%d %H:%M:%S"))
+
+        if len(eod_cdls):
+            row = eod_cdls.iloc[0]
+            results.at[0, "exit_time"] = index
+            results.at[0, "exit"] = row['close']
+            results.at[0, "exit_reason"] = "eod"
+            results.at[0, "status"] = "signal-processed"
+            return results
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Bearish
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if pos_dir.lower() == "bearish":
-        tgt_df = df['close'] > pos_entr_price - target
-        sl_df = df['close'] > (pos_entr_price + sl)
-        #print('bearish')
-        #if len(slDF) > 0 :
-        #strategy.at[0, 'Position Exit'] == slDF.at[1, 'Close']
-        #strategy.at[0, 'Position Exit time'] == slDF.at[0, index]
-        #   print(slDF)
+    elif pos_dir.lower() == "bearish":
+        # ------------------------------------------------------------------------- scan all candles
+        for index, row in active_cdls.iterrows():
 
-        #print(slDF)
+            # --------------------------------------------------------------------- trail calculations
+            if row['close'] < pos_entr_price:  # ---------------------------------- if price moved in direction
+                movment = pos_entr_price - row['close']
+            else:
+                movment = 0
 
-        #print('no exits trigerred, check EoD candle')
-        #print('exit', strategy.at[0, 'Exit'])
-        #type(strategy.at[0, 'Exit'])
+            if algoParams['controls']['target_trail_enabled']:
+                target = (pos_entr_price - movment) - tgt
 
-        results.at[0,
-                   'Result'] = results.at[0, 'Exit'] - results.at[0, 'Entry']
+            if algoParams['controls']['stoploss_trail_enabled']:
+                sl = (pos_entr_price - movment) + stls
+
+            if row['close'] > pos_entr_price + target:  # ------------------------- target hit
+                results.at[0, "exit_time"] = index
+                results.at[0, "exit"] = row['close']
+                results.at[0, "exit_reason"] = "target"
+                results.at[0, "status"] = "signal-processed"
+                return results
+            elif row['close'] < (pos_entr_price - sl):  # -------- stoploss hit
+                results.at[0, "exit_time"] = index
+                results.at[0, "exit"] = row['close']
+                results.at[0, "exit_reason"] = "sl/deepsl"
+                results.at[0, "status"] = "signal-processed"
+                return results
+
+        start_time = posentr.replace(hour=15, minute=16, second=0)
+        end_time = posentr.replace(hour=15, minute=31, second=0)
+
+        eod_cdls = libCdl.filterCandles(
+            df, start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            end_time.strftime("%Y-%m-%d %H:%M:%S"))
+
+        if len(eod_cdls):
+            row = eod_cdls.iloc[0]
+            results.at[0, "exit_time"] = index
+            results.at[0, "exit"] = row['close']
+            results.at[0, "exit_reason"] = "eod"
+            results.at[0, "status"] = "signal-processed"
+            return results
+
+    else:
+        return results
 
     return results
 

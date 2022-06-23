@@ -27,30 +27,34 @@ result = pd.DataFrame(columns=None)
 
 for dt in tqdm(scan_dates, colour="green"):
 
-    df = s.execute(env=env,
-                   dbConn=dbConn,
-                   mode="entr",
-                   algoID=analysis_algorithm,
-                   symbol=analysis_symbol,
-                   date=dt,
-                   pos_dir="",
-                   pos_entr_price=0,
-                   pos_entr_time="",
-                   trading=SIMULATION)  # get all entry calls
-
-    if df.at[0, 'dir'] == 'Bullish' or df.at[0, 'dir'] == 'Bearish':
-        df2 = s.execute(env=env,
+    df_entr = s.execute(env=env,
                         dbConn=dbConn,
-                        mode="exit",
+                        mode="entr",
                         algoID=analysis_algorithm,
                         symbol=analysis_symbol,
                         date=dt,
-                        pos_dir=df.at[0, 'dir'],
-                        pos_entr_price=df.at[0, 'entry'],
-                        pos_entr_time=df.at[0, 'date'],
-                        trading=SIMULATION)  # get all exit calls
+                        pos_dir="",
+                        pos_entr_price=0,
+                        pos_entr_time="",
+                        trading=SIMULATION)  # get all entry calls
+    df_r = df_entr
 
-    result = result.append(df)
+    if df_entr.at[0, 'dir'] == 'Bullish' or df_entr.at[0, 'dir'] == 'Bearish':
+
+        df_exit = s.execute(env=env,
+                            dbConn=dbConn,
+                            mode="exit",
+                            algoID=analysis_algorithm,
+                            symbol=analysis_symbol,
+                            date=dt,
+                            pos_dir=df_entr.at[0, 'dir'],
+                            pos_entr_price=df_entr.at[0, 'entry'],
+                            pos_entr_time=df_entr.at[0, 'date'],
+                            trading=SIMULATION)  # get all exit calls
+
+        df_r = pd.concat([df_entr, df_exit])
+
+    result = result.append(df_r)
 
 libBk.btResultsParser(result,
                       analysis_algorithm,

@@ -130,14 +130,12 @@ def readAlgoParams(env, conn, cellValue):
 
         ap2['controls']['stoploss_per'] = float(
             ap2['controls']['stoploss_per'] / 100)
-        ap2['controls']['deep_stoploss_per'] = float(
-            ap2['controls']['deep_stoploss_per'] / 100)
 
         ap2['controls']['budget_max_per'] = float(
             ap2['controls']['budget_max_per'] / 100)
 
     except Exception as e:
-        print(e)
+        print('tsDb.py - Read error for ', e)
         return None
 
     return ap2

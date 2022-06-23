@@ -86,5 +86,6 @@ def TickToCdl(df, date, freq):
 
 
 def filterCandles(df, start, end):
-    df = df[(df['time'] >= start) & (df['time'] <= end)]
+    df = df.loc[start:end]
+    # df = df[(df['time'] >= start) & (df['time'] <= end)]
     return df
