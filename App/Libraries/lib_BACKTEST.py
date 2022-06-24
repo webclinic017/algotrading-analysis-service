@@ -1,4 +1,6 @@
+import os
 import pandas as pd
+
 from fpdf import FPDF
 from datetime import datetime
 
@@ -17,10 +19,9 @@ def btResultsParser(data, algo, plot, duration):
     # print(data["time"].dt.strftime("%Y-%m-%d %H:%M:%S"))
 
     # store to csv file
-    BASE_PATH = "/home/parag/devArea/algotrading-analysis-service/StudyZone/results/"
-
-    dt = datetime.now().strftime("%Y-%m-%dT%H%M%S")
-    f = BASE_PATH + dt + "-" + algo + "-" + duration + ".csv"
+    f = os.getcwd() + "/StudyZone/results/" + datetime.now().strftime(
+        "%Y-%m-%dT%H%M%S") + "-" + algo + "-" + duration + ".csv"
+    f = f.replace(' ', '')
     data.to_csv(f, index=False)
 
     from fpdf import FPDF

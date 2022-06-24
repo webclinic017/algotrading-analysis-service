@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from tqdm import tqdm
 from time import sleep
@@ -52,7 +53,9 @@ for dt in tqdm(scan_dates, colour="green"):
                             pos_entr_time=df_entr.at[0, 'date'],
                             trading=SIMULATION)  # get all exit calls
 
-        df_r = pd.concat([df_entr, df_exit])
+        df_r.at[0, "exit"] = df_exit.at[0, "exit"]
+        df_r.at[0, "exit_time"] = df_exit.at[0, "exit_time"]
+        df_r.at[0, "exit_reason"] = df_exit.at[0, "exit_reason"]
 
     result = result.append(df_r)
 
