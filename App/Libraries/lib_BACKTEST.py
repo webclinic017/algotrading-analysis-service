@@ -1,3 +1,4 @@
+from ast import IsNot
 import os
 from unittest import result
 import pandas as pd
@@ -60,19 +61,32 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
             image_title = analysis_symbol + " " + dt
             cdl = db.getCdlBtwnTime(env, dbConn, analysis_symbol, dt,
                                     ["09:00", "16:00"], "1")
-
             df_select = result[result["date"].astype(str).str[:10] == dt]
-            # val = result.loc[result['Date'] == dt]
-            print(df_select)
-            # print(val.dtype())
-            # df_select = result.loc[dt]
-            print(dt, " - ", df_select.iloc[0]["date"], " - ",
-                  df_select.iloc[0]["debug"])
+
+            hlines_level = []
+            hlines_color = []
+            hlines_style = []
+
+            try:
+                # print(df_select.iloc[0]["debug"])
+                dbg_var = json.loads(df_select.iloc[0]["debug"])
+                for vars in dbg_var:
+                    if vars['drawing'] == 'line':
+                        hlines_level.append(float(vars['value']))
+                        hlines_color.append(vars['draw_color'][0])
+                        if vars['draw_fill'] == 'dotted':
+                            hlines_style.append('--')
+                        else:
+                            hlines_style.append('-')
+            except Exception as e:
+                print(e)
 
             if len(cdl):
                 # ------------------------------------------------- Generate Images
                 chart_file_name = file_id + "-" + image_title + '.png'
                 charts_list.append(chart_file_name)
+
+                # print(hlines_level)
 
                 # {
                 # "variable": "orb_high",
@@ -81,19 +95,38 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                 # "draw_fill": "solid",
                 # "draw_color": "green"
                 # },
+                # apd = mpf.make_addplot(signal,
+                #                        type='scatter',
+                #                        markersize=200,
+                #                        marker='^')
 
-                mpf.plot(
-                    cdl,
-                    type='candle',
-                    title=dict(title=image_title, y=1.05, fontsize=10, x=0.59),
-                    volume=True,
-                    show_nontrading=True,
-                    style='yahoo',
-                    #  figsize=(5, 6),
-                    savefig=dict(fname=chart_file_name,
-                                 dpi=myDpi,
-                                 bbox_inches='tight',
-                                 pad_inches=0))
+                # hlines=dict(hlines=[3080,3121],colors=['g','r'],linestyle='-.')
+                hlines = dict(hlines=hlines_level,
+                              colors=hlines_color,
+                              linestyle=hlines_style,
+                              linewidths=1)
+
+                fig, axlist = mpf.plot(cdl,
+                                       hlines=hlines,
+                                       type='candle',
+                                       title=dict(title=image_title,
+                                                  y=1.05,
+                                                  fontsize=10,
+                                                  x=0.59),
+                                       volume=True,
+                                       show_nontrading=True,
+                                       style='yahoo',
+                                       returnfig=True)
+
+                axlist[0].text(1, 35640, 'Custom\nText\nHere')
+                mpf.show()
+                #  figsize=(5, 6),
+                # savefig=dict(fname=chart_file_name,
+                #              dpi=myDpi,
+                #              bbox_inches='tight',
+                #              pad_inches=0))
+                #              ,
+                # addplot=apd)
 
         # -------------------------------------------------------------------- Append charts to PDF Report
         print("Generating PDF with charts #file-prefix-id: ", file_id)
