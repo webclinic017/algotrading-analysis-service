@@ -19,7 +19,7 @@ def research():
                    dbConn=dbConn,
                    env=env,
                    trading_mode=SIMULATION,
-                   plot_images=False)
+                   plot_images=True)
 
 
 research()

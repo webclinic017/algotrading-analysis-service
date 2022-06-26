@@ -1,6 +1,7 @@
 import os
+from unittest import result
 import pandas as pd
-
+import json
 import random
 import matplotlib
 
@@ -17,30 +18,21 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                     analysis_algorithm, analysis_symbol,
                     analysis_duration_backward):
 
-    file_id = random.randint(0, 999999)
-    file_id = str(file_id)
+    myDpi = 250
+    charts_list = []
 
-    # generate_stock_report
-
-    # round digits
-    # data[['Entry', 'Target', 'SL', 'Exit', 'Result', 'ResultPerc', 'SMax', 'SMin', 'SMaxD', 'SMinD']] = \
-    # data[['Entry', 'Target', 'SL', 'Exit', 'Result', 'ResultPerc', 'SMax', 'SMin', 'SMaxD', 'SMinD']].astype(float).round(1)
-
-    # print('Results: ', data['Result'].sum().astype(float).round(1))
-    # print(result["dir"].value_counts())
-    # print(data['Signal'].value_counts())
-    # print(data["time"].dt.strftime("%Y-%m-%d %H:%M:%S"))
-
-    # store to csv file
+    file_id = str(random.randint(0, 999999))
     ftitle = datetime.now().strftime(
         "%Y-%m-%dT%H%M%S"
     ) + "-" + analysis_symbol + "-" + analysis_duration_backward
+
+    generate_performance_report(result)
 
     f = os.getcwd() + "/StudyZone/results/" + file_id + "-" + ftitle
     f = f.replace(' ', '')
     result.to_csv(f + ".csv", index=False)
 
-    # -------------------------------------------------------------------- generate pdf (with charts)
+    # -------------------------------------------------------------------- Generate pdf (with charts)
     from fpdf import FPDF
     fpdf = FPDF(orientation='L', unit='mm', format='A4')
 
@@ -49,7 +41,7 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
     author = "https://parag-b.github.io/algotrading-exchange-manager/"
     fpdf.set_author(author)
     fpdf.set_fill_color(153, 204, 255)
-    fpdf.set_title(ftitle)
+    fpdf.set_title(file_id + "-" + ftitle)
 
     fpdf.cell(0, 10, analysis_symbol, ln=1, align='C')
     fpdf.cell(0, 10, analysis_algorithm, ln=1, align='C', fill=True)
@@ -59,13 +51,7 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
               ln=1,
               align='C')
 
-    myDpi = 250
-    file_id = random.randint(0, 999999)
-    file_id = str(file_id)
-
-    charts_list = []
-
-    if plot_images is True:
+    if plot_images is True:  # ------------------------------------- Draw charts
         from fpdf import FPDF
 
         print("Generating images #file-prefix-id: ", file_id)
@@ -75,10 +61,26 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
             cdl = db.getCdlBtwnTime(env, dbConn, analysis_symbol, dt,
                                     ["09:00", "16:00"], "1")
 
+            df_select = result[result["date"].astype(str).str[:10] == dt]
+            # val = result.loc[result['Date'] == dt]
+            print(df_select)
+            # print(val.dtype())
+            # df_select = result.loc[dt]
+            print(dt, " - ", df_select.iloc[0]["date"], " - ",
+                  df_select.iloc[0]["debug"])
+
             if len(cdl):
-                # print("Generating image: ", image_title + '.png')
+                # ------------------------------------------------- Generate Images
                 chart_file_name = file_id + "-" + image_title + '.png'
                 charts_list.append(chart_file_name)
+
+                # {
+                # "variable": "orb_high",
+                # "value": "33233.6",
+                # "drawing": "line",
+                # "draw_fill": "solid",
+                # "draw_color": "green"
+                # },
 
                 mpf.plot(
                     cdl,
@@ -93,9 +95,9 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                                  bbox_inches='tight',
                                  pad_inches=0))
 
+        # -------------------------------------------------------------------- Append charts to PDF Report
         print("Generating PDF with charts #file-prefix-id: ", file_id)
         for image_name in tqdm(charts_list, colour='#13B6D0'):
-            # for image_name in charts_list:
 
             fpdf.image(
                 image_name,
@@ -106,61 +108,62 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                 type='',
                 link='')
 
+            # ---------------------------------------------------------------- Delete charts (cleanup)
             os.remove(image_name)
             # print("Deleting file: ", image_name)
 
             fpdf.add_page()
 
-    fpdf.output(f + '.pdf', "F")
+    fpdf.output(f + '.pdf', "F")  # ---------------------------------- Save PDF
     fpdf.close()
 
 
-#  todo: create image for every scan using parser
-
-
-def generate_stock_report():
-
-    df = pd.read_csv(
-        "/home/parag/devArea/algotrading-analysis-service/StudyZone/results/2022-06-19T135516-S001-01-ORB-OpeningRangeBreakout-6 month.csv"
-    )
+def generate_performance_report(df):
 
     # print(df.head())
-    report_table = {
-        "strategy": "",
-        "data err": "",
-        "data err %": "",
-        "bullish": 0,
-        "bearish": 0,
-        "failed bullish": 0,
-        "failed bearish": 0,
-        "na": 0,
+    result = df[df["status"].str.contains("signal-processed") == True]
+
+    total_rows = len(df.index)
+    err = df["status"].str.contains(r'ERR').sum()
+    na = df["dir"].str.fullmatch(r'NA').sum(),
+    bullish = df["dir"].str.fullmatch(r'Bullish').sum(),
+    bearish = df["dir"].str.fullmatch(r'Bearish').sum(),
+    failed_bullish = df["dir"].str.fullmatch(r'Failed Bullish').sum(),
+    failed_bearish = df["dir"].str.fullmatch(r'Failed Bearish').sum(),
+
+    report_summary = {
+        "strategy": result.iloc[0]["strategy"],
+        "instrument": result.iloc[0]["instr"],
+        "total_data": total_rows,
+        "data_err %": round((err / total_rows) * 100, 2),
+        "bullish": bullish[0],
+        "bearish": bearish[0],
+        "failed_bullish": failed_bullish[0],
+        "failed_bearish": failed_bearish[0],
+        "na": na[0],
         "winning": 0,
         "winning %": 0,
         "losing": 0,
         "losing %": 0,
-        "avg. win": 0,
-        "avg. win %": 0,
-        "avg. loss": 0,
-        "avg. loss %": 0,
-        "avg. time": 0,
-        "avg. time %": 0,
-        "avg. time (max)": 0,
-        "avg. time (min)": 0,
-        "drawdown (max)": 0,
-        "drawdown (max) %": 0,
-        "drawdown (min)": 0,
-        "drawdown (min) %": 0,
-        "drawdown (avg)": 0,
-        "drawdown (avg) %": 0,
+        "avg_win": 0,
+        "avg_win %": 0,
+        "avg_loss": 0,
+        "avg_loss %": 0,
+        "avg_time": 0,
+        "avg_time_%": 0,
+        "avg_time_(max)": 0,
+        "avg_time_(min)": 0,
+        "drawdown_(max)": 0,
+        "drawdown_%_(max)": 0,
+        "drawdown_(min)": 0,
+        "drawdown_%_(min)": 0,
+        "drawdown_(avg)": 0,
+        "drawdown_%_(avg)": 0,
     }
 
-    print(report_table)
+    json_object = json.dumps(report_summary, indent=4)
 
-    val = df["dir"].value_counts()
-    for k, v in val.items():
-        report_table[k.lower()] = v
-
-    print(report_table)
+    print(json_object)
 
 
 # generate_stock_report()

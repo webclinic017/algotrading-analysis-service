@@ -28,7 +28,7 @@ tsDB.createAllTables(dbConn)
 def read_root():
     return {
         "Info":
-        "algotrading-analysis-service v0.1.9-beta (Rel Date: 09-June-2022) [00]"
+        "algotrading-analysis-service v0.2.0-beta (Rel Date: 26-June-2022) [00]"
     }
 
 

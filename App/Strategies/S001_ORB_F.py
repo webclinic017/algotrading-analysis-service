@@ -11,6 +11,7 @@
 # Subscription services - Stall/Direction from position
 # ----------------------------------------------------------------
 
+import json
 from datetime import datetime, timedelta
 
 import App.Libraries.lib_FN as libFn
@@ -42,6 +43,8 @@ def S001_ORB(algoID, mode, symbol, df, date, algoParams, pos_dir,
 
 
 def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
+
+    debug_list = []
 
     try:
 
@@ -104,13 +107,39 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
         return results
 
     else:
-        results.at[0,
-                   "debug"] = ("#orb_low:" + str(orb_low) + ":red-1" +
-                               "#orb_high:" + str(orb_high) + ":green-1" +
-                               "#cdl_926:" + str(cdl_926) + ":info-5" +
-                               "#cdl_926open:" + str(cdl_926open) + ":info-5" +
-                               "#cdl_930:" + str(cdl_930) + ":info-5" +
-                               "#orbDelta:" + str(orbDelta) + ":data")
+
+        debug_list.append({
+            'variable': 'orb_low',
+            'value': str(orb_low),
+            'drawing': 'line',
+            'draw_fill': 'solid',
+            'draw_color': 'red'
+        })
+        debug_list.append({
+            'variable': 'orb_high',
+            'value': str(orb_high),
+            'drawing': 'line',
+            'draw_fill': 'solid',
+            'draw_color': 'green'
+        })
+        debug_list.append({
+            'variable': 'cdl_926',
+            'value': str(cdl_926),
+            'drawing': 'line',
+            'draw_fill': 'dotted',
+            'draw_color': 'blue'
+        })
+        debug_list.append({
+            'variable': 'cdl_930',
+            'value': str(cdl_930),
+            'drawing': 'line',
+            'draw_fill': 'dotted',
+            'draw_color': 'blue'
+        })
+
+        json_object = json.dumps(debug_list)
+
+        results.at[0, "debug"] = json_object
         return results
 
 
