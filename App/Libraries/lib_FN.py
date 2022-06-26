@@ -13,7 +13,7 @@ def getDates(duration, end_date):
     numPart = int(base[0])
     unit = base[1]
 
-    if end_date == "":
+    if end_date == "" or end_date is None:
         end = datetime.date.today()
     else:
         end = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()

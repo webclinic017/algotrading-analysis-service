@@ -5,6 +5,10 @@ credentials.json
 *.ods
 *.zip
 *.7z
+*ignore-dir*
 ticks_nsefut
 ticks_nsestk
 env
+aa_venv/*
+StudyZone/results/*.pdf
+StudyZone/results/*.png

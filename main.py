@@ -7,6 +7,7 @@ from App.Strategies import Strategies
 from App.Engine import Engines
 from App.Services import Services
 from App.DB import tsDB
+import App.Services.backtesting as bt
 
 LIVE_TRADING = True
 
@@ -51,8 +52,21 @@ def read_item(
 
 
 @app.get("/simulation/")
-def read_item(algo: str, symbol: str, startdate: str, enddate: str):
-    ret = Strategies.execute(env, algo)
+def read_item(analysis_algorithm: str = 'S001-01-ORB-OpeningRangeBreakout',
+              analysis_symbol: str = "BANKNIFTY-FUT",
+              analysis_duration_backward: str = "6 weeks",
+              analysis_end_date: Optional[str] = None,
+              plot_images: bool = False):
+
+    ret = 2
+    bt.backtesting(analysis_algorithm=analysis_algorithm,
+                   analysis_symbol=analysis_symbol,
+                   analysis_duration_backward=analysis_duration_backward,
+                   analysis_end_date=analysis_end_date,
+                   dbConn=dbConn,
+                   env=env,
+                   trading_mode=False,
+                   plot_images=plot_images)
     return {"signals": ret}
 
 
