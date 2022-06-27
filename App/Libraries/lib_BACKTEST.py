@@ -26,7 +26,7 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                     analysis_algorithm, analysis_symbol,
                     analysis_duration_backward):
 
-    myDpi = 300
+    myDpi = 200
     charts_list = []
 
     file_id = str(random.randint(0, 999999))
@@ -46,7 +46,7 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
     pdf = FPDF(orientation='L', unit='mm', format='A4')
 
     pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
+    pdf.set_font("helvetica", "B", 16)
     author = "https://parag-b.github.io/algotrading-exchange-manager/"
     pdf.set_author(author)
     pdf.set_fill_color(153, 204, 255)
@@ -59,6 +59,8 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
              datetime.now().strftime("%Y-%m-%d %-I:%M:%-S %p"),
              ln=1,
              align='C')
+
+    pdf.set_margin(0)
 
     if plot_images is True:  # ------------------------------------- Draw charts
 
@@ -73,6 +75,14 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
             hlines_level = []
             hlines_color = []
             hlines_style = []
+
+            # {
+            # "variable": "orb_high",
+            # "value": "33233.6",
+            # "drawing": "line",
+            # "draw_fill": "solid",
+            # "draw_color": "green"
+            # }
 
             try:
                 # print(df_select.iloc[0]["debug"])
@@ -89,93 +99,79 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                 print(e)
 
             if len(cdl):
-                # ------------------------------------------------- Generate Images
                 chart_file_name = file_id + "-" + image_title + '.png'
                 charts_list.append(chart_file_name)
+                # ------------------------------------------------- Generate Images
+                if env['charting_sw'] == "finplot":
 
-                fplt.candlestick_ochl(cdl[['open', 'close', 'high', 'low']])
+                    # `````````````````````finplot`````````````````````
+                    fplt.candlestick_ochl(cdl[['open', 'close', 'high',
+                                               'low']])
 
-                # print(hlines_level)
+                    def save():
+                        # import io
+                        # f = io.BytesIO()
+                        # fplt.screenshot(f)
+                        fplt.screenshot(open(chart_file_name, 'wb'))
+                        fplt.close()
 
-                # {
-                # "variable": "orb_high",
-                # "value": "33233.6",
-                # "drawing": "line",
-                # "draw_fill": "solid",
-                # "draw_color": "green"
-                # },
+                    fplt.timer_callback(
+                        save, 0.4,
+                        single_shot=True)  # wait some until we're rendered
+                    fplt.show()
 
-                # hlines=dict(hlines=[3080,3121],colors=['g','r'],linestyle='-.')
+                else:
+                    # `````````````````````matplotblib`````````````````````
 
-                # fig, axlist = mpf.plot(cdl,
-                #                        type='candle',
-                #                        hlines=dict(hlines=hlines_level,
-                #                                    colors=hlines_color,
-                #                                    linestyle=hlines_style,
-                #                                    linewidths=1),
-                #                        volume=True,
-                #                        show_nontrading=True,
-                #                        style='yahoo',
-                #                        returnfig=True)
+                    fig = mpf.figure(style='yahoo')
+                    fig, axlist = mpf.plot(cdl,
+                                           type='candle',
+                                           hlines=dict(hlines=hlines_level,
+                                                       colors=hlines_color,
+                                                       linestyle=hlines_style,
+                                                       linewidths=1),
+                                           volume=True,
+                                           show_nontrading=True,
+                                           style='yahoo',
+                                           savefig=dict(fname=chart_file_name,
+                                                        dpi=myDpi,
+                                                        bbox_inches='tight',
+                                                        pad_inches=0),
+                                           returnfig=True)
 
-                # axlist[0].text(Timestamp("2022-05-31 12:00"), 35640,
-                #                'Custom\nText\nHere')
+                    for vars in dbg_var:
+                        i = 0
+                        # ax = [10]
+                        if vars['drawing'] == 'line':
+                            # ax[i] = fig.add_axes([0.15, 0.18, 0.70, 0.70])
+                            axlist[i].text(
+                                Timestamp(dt + " 09:30"),
+                                float(vars['value']),
+                                str(vars['variable']) + " " +
+                                str(vars['value']),
+                                #    color='white',
+                                alpha=0.5)
+                            i = i + 1
 
-                # apd = mpf.make_addplot(signal,
-                #                        type='scatter',
-                #                        markersize=200,
-                #                        marker='^')
-                # plt.axis('off')  # command for hiding the axis.
-                # fig.tight_layout(pad=0)
-                # fig.set_facecolor('red')
+                    # savefig = dict(fname=chart_file_name,
+                    #                dpi=myDpi,
+                    #                bbox_inches='tight',
+                    #                pad_inches=0)
+                    fig.set_size_inches(18., 11.)
+                    fig.savefig(chart_file_name, dpi=myDpi)
 
-                # fig.savefig(chart_file_name)
-                # mpf.plot(cdl,
-                #          hlines=hlines,
-                #          type='candle',
-                #          title=dict(title=image_title,
-                #                     y=1.05,
-                #                     fontsize=10,
-                #                     x=0.59),
-                #          volume=True,
-                #          show_nontrading=True,
-                #          style='yahoo',
-                #          savefig=dict(fname=chart_file_name,
-                #                       dpi=myDpi,
-                #                       bbox_inches='tight',
-                #                       pad_inches=0))
-                #  ,
-                # addplot=apd)
-
-                def save():
-                    # import io
-                    # f = io.BytesIO()
-                    # fplt.screenshot(f)
-                    fplt.screenshot(open(chart_file_name, 'wb'))
-                    fplt.close()
-
-                fplt.timer_callback(
-                    save, 0.5,
-                    single_shot=True)  # wait some until we're rendered
-                fplt.show()
         # -------------------------------------------------------------------- Append charts to PDF Report
 
         print("Generating PDF with charts #file-prefix-id: ", file_id)
         for image_name in tqdm(charts_list, colour='#13B6D0'):
-
-            pdf.image(
-                image_name,
-                x=None,
-                y=None,
-                w=myDpi - 50,
-                #    h=500,
-                type='',
-                link='')
-
-            # ---------------------------------------------------------------- Delete charts (cleanup)
+            pdf.image(image_name,
+                      x=None,
+                      y=None,
+                      h=pdf.eph,
+                      w=pdf.epw,
+                      type='',
+                      link='')
             os.remove(image_name)
-            # print("Deleting file: ", image_name)
-
             pdf.add_page()
 
     pdf.output(f + '.pdf', "F")  # ---------------------------------- Save PDF
@@ -225,7 +221,7 @@ def generate_performance_report(df):
         "drawdown_%_(avg)": 0,
     }
 
-    json_object = json.dumps(report_summary, indent=4)
+    # json_object = json.dumps(report_summary, indent=4)
 
     # print(json_object)
 

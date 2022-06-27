@@ -19,7 +19,7 @@ def envVar():
         f = open(credentials_file, "r")
         credentials = json.load(f)
         f.close()
-
+        dict['charting_sw'] = credentials['CHARTING_SW']
         dict['database'] = credentials[credentials['DB_PROFILE']]['NAME']
         dict['host'] = credentials[credentials['DB_PROFILE']]['ADDRESS']
         dict['user'] = credentials[credentials['DB_PROFILE']]['USERNAME']
