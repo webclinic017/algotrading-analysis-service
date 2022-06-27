@@ -75,6 +75,9 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
             hlines_level = []
             hlines_color = []
             hlines_style = []
+            vlines_level = []
+            vlines_color = []
+            vlines_style = []
 
             # {
             # "variable": "orb_high",
@@ -88,13 +91,22 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                 # print(df_select.iloc[0]["debug"])
                 dbg_var = json.loads(df_select.iloc[0]["debug"])
                 for vars in dbg_var:
-                    if vars['drawing'] == 'line':
-                        hlines_level.append(float(vars['value']))
-                        hlines_color.append(vars['draw_color'][0])
+                    if vars['drawing'] == 'hline':
+                        hlines_level.append(float(vars['value-y']))
+                        hlines_color.append(vars['draw_color'])
                         if vars['draw_fill'] == 'dotted':
                             hlines_style.append('--')
                         else:
                             hlines_style.append('-')
+                    elif vars['drawing'] == 'vline':
+                        vlines_level.append(dt + " " + (vars['value-x']))
+                        vlines_color.append(vars['draw_color'])
+                        if vars['draw_fill'] == 'dotted':
+                            vlines_style.append('--')
+                        else:
+                            vlines_style.append('-')
+
+                            # vlines=dict(vlines='2019-11-18',linewidths=125,alpha=0.4)
             except Exception as e:
                 print(e)
 
@@ -126,10 +138,17 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                     fig = mpf.figure(style='yahoo')
                     fig, axlist = mpf.plot(cdl,
                                            type='candle',
+                                           title=image_title,
                                            hlines=dict(hlines=hlines_level,
                                                        colors=hlines_color,
                                                        linestyle=hlines_style,
-                                                       linewidths=1),
+                                                       linewidths=1,
+                                                       alpha=0.4),
+                                           vlines=dict(vlines=vlines_level,
+                                                       colors=vlines_color,
+                                                       linestyle=vlines_style,
+                                                       linewidths=1,
+                                                       alpha=0.4),
                                            volume=True,
                                            show_nontrading=True,
                                            style='yahoo',
@@ -139,24 +158,13 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                                                         pad_inches=0),
                                            returnfig=True)
 
-                    for vars in dbg_var:
-                        i = 0
-                        # ax = [10]
-                        if vars['drawing'] == 'line':
-                            # ax[i] = fig.add_axes([0.15, 0.18, 0.70, 0.70])
-                            axlist[i].text(
-                                Timestamp(dt + " 09:30"),
-                                float(vars['value']),
-                                str(vars['variable']) + " " +
-                                str(vars['value']),
-                                #    color='white',
-                                alpha=0.5)
-                            i = i + 1
+                    for vars in dbg_var:  # ---------- print markers/info on chart
+                        axlist[0].text(Timestamp(dt + " " + vars['value-x']),
+                                       float(vars['value-y']),
+                                       str(vars['variable']) + " " +
+                                       str(vars['value-print']),
+                                       alpha=0.5)
 
-                    # savefig = dict(fname=chart_file_name,
-                    #                dpi=myDpi,
-                    #                bbox_inches='tight',
-                    #                pad_inches=0)
                     fig.set_size_inches(18., 11.)
                     fig.savefig(chart_file_name, dpi=myDpi)
 

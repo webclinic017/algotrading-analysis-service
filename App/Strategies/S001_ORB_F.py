@@ -109,30 +109,56 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
     else:
 
         debug_list.append({
+            'variable': '<\nanalysis \nstart',
+            'value-x': "09:30",
+            'value-y': str(df['close'].min()),
+            'value-print': '',
+            'drawing': 'vline',
+            'draw_fill': 'dotted',
+            'draw_color': 'cyan'
+        })
+        debug_list.append({
+            'variable': '< \nanalysis \nend',
+            'value-x': "10:00",
+            'value-y': str(df['close'].min()),
+            'value-print': '',
+            'drawing': 'vline',
+            'draw_fill': 'dotted',
+            'draw_color': 'cyan'
+        })
+        debug_list.append({
             'variable': 'orb_low',
-            'value': str(orb_low),
-            'drawing': 'line',
+            'value-x': "10:15",
+            'value-y': str(orb_low),
+            'value-print': str(orb_low),
+            'drawing': 'hline',
             'draw_fill': 'solid',
             'draw_color': 'red'
         })
         debug_list.append({
             'variable': 'orb_high',
-            'value': str(orb_high),
-            'drawing': 'line',
+            'value-x': "10:15",
+            'value-y': str(orb_high),
+            'value-print': str(orb_high),
+            'drawing': 'hline',
             'draw_fill': 'solid',
             'draw_color': 'green'
         })
         debug_list.append({
             'variable': 'cdl_926',
-            'value': str(cdl_926),
-            'drawing': 'line',
+            'value-x': "10:45",
+            'value-y': str(cdl_926),
+            'value-print': str(cdl_926),
+            'drawing': 'hline',
             'draw_fill': 'dotted',
             'draw_color': 'blue'
         })
         debug_list.append({
             'variable': 'cdl_930',
-            'value': str(cdl_930),
-            'drawing': 'line',
+            'value-x': "10:45",
+            'value-y': str(cdl_930),
+            'value-print': str(cdl_930),
+            'drawing': 'hline',
             'draw_fill': 'dotted',
             'draw_color': 'blue'
         })
