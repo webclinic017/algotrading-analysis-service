@@ -12,3 +12,4 @@ env
 aa_venv/*
 StudyZone/results/*.pdf
 StudyZone/results/*.png
+*.png

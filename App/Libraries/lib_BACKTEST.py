@@ -7,7 +7,14 @@ import random
 import matplotlib
 
 matplotlib.use('Agg')
+import matplotlib.style as mplstyle
+
+mplstyle.use('fast')
+import matplotlib.pyplot as plt
+
+from fpdf import FPDF
 import mplfinance as mpf
+from pandas import Timestamp
 
 from datetime import datetime
 from tqdm import tqdm
@@ -19,7 +26,7 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                     analysis_algorithm, analysis_symbol,
                     analysis_duration_backward):
 
-    myDpi = 250
+    myDpi = 300
     charts_list = []
 
     file_id = str(random.randint(0, 999999))
@@ -34,26 +41,26 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
     result.to_csv(f + ".csv", index=False)
 
     # -------------------------------------------------------------------- Generate pdf (with charts)
-    from fpdf import FPDF
-    fpdf = FPDF(orientation='L', unit='mm', format='A4')
 
-    fpdf.add_page()
-    fpdf.set_font("Arial", "B", 16)
+    pdf = FPDF()
+    pdf = FPDF(orientation='L', unit='mm', format='A4')
+
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
     author = "https://parag-b.github.io/algotrading-exchange-manager/"
-    fpdf.set_author(author)
-    fpdf.set_fill_color(153, 204, 255)
-    fpdf.set_title(file_id + "-" + ftitle)
+    pdf.set_author(author)
+    pdf.set_fill_color(153, 204, 255)
+    pdf.set_title(file_id + "-" + ftitle)
 
-    fpdf.cell(0, 10, analysis_symbol, ln=1, align='C')
-    fpdf.cell(0, 10, analysis_algorithm, ln=1, align='C', fill=True)
-    fpdf.cell(0,
-              10,
-              datetime.now().strftime("%Y-%m-%d %-I:%M:%-S %p"),
-              ln=1,
-              align='C')
+    pdf.cell(0, 10, analysis_symbol, ln=1, align='C')
+    pdf.cell(0, 10, analysis_algorithm, ln=1, align='C', fill=True)
+    pdf.cell(0,
+             10,
+             datetime.now().strftime("%Y-%m-%d %-I:%M:%-S %p"),
+             ln=1,
+             align='C')
 
     if plot_images is True:  # ------------------------------------- Draw charts
-        from fpdf import FPDF
 
         print("Generating images #file-prefix-id: ", file_id)
         for dt in tqdm(scan_dates, colour='#4FD4B6'):
@@ -95,44 +102,54 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                 # "draw_fill": "solid",
                 # "draw_color": "green"
                 # },
-                # apd = mpf.make_addplot(signal,
-                #                        type='scatter',
-                #                        markersize=200,
-                #                        marker='^')
 
                 # hlines=dict(hlines=[3080,3121],colors=['g','r'],linestyle='-.')
-                hlines = dict(hlines=hlines_level,
-                              colors=hlines_color,
-                              linestyle=hlines_style,
-                              linewidths=1)
 
                 fig, axlist = mpf.plot(cdl,
-                                       hlines=hlines,
                                        type='candle',
-                                       title=dict(title=image_title,
-                                                  y=1.05,
-                                                  fontsize=10,
-                                                  x=0.59),
+                                       hlines=dict(hlines=hlines_level,
+                                                   colors=hlines_color,
+                                                   linestyle=hlines_style,
+                                                   linewidths=1),
                                        volume=True,
                                        show_nontrading=True,
                                        style='yahoo',
                                        returnfig=True)
 
-                axlist[0].text(1, 35640, 'Custom\nText\nHere')
-                mpf.show()
-                #  figsize=(5, 6),
-                # savefig=dict(fname=chart_file_name,
-                #              dpi=myDpi,
-                #              bbox_inches='tight',
-                #              pad_inches=0))
-                #              ,
+                # axlist[0].text(Timestamp("2022-05-31 12:00"), 35640,
+                #                'Custom\nText\nHere')
+
+                # apd = mpf.make_addplot(signal,
+                #                        type='scatter',
+                #                        markersize=200,
+                #                        marker='^')
+                plt.axis('off')  # command for hiding the axis.
+                fig.tight_layout(pad=0)
+                fig.set_facecolor('red')
+
+                fig.savefig(chart_file_name)
+                # mpf.plot(cdl,
+                #          hlines=hlines,
+                #          type='candle',
+                #          title=dict(title=image_title,
+                #                     y=1.05,
+                #                     fontsize=10,
+                #                     x=0.59),
+                #          volume=True,
+                #          show_nontrading=True,
+                #          style='yahoo',
+                #          savefig=dict(fname=chart_file_name,
+                #                       dpi=myDpi,
+                #                       bbox_inches='tight',
+                #                       pad_inches=0))
+                #  ,
                 # addplot=apd)
 
         # -------------------------------------------------------------------- Append charts to PDF Report
         print("Generating PDF with charts #file-prefix-id: ", file_id)
         for image_name in tqdm(charts_list, colour='#13B6D0'):
 
-            fpdf.image(
+            pdf.image(
                 image_name,
                 x=None,
                 y=None,
@@ -145,10 +162,10 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
             os.remove(image_name)
             # print("Deleting file: ", image_name)
 
-            fpdf.add_page()
+            pdf.add_page()
 
-    fpdf.output(f + '.pdf', "F")  # ---------------------------------- Save PDF
-    fpdf.close()
+    pdf.output(f + '.pdf', "F")  # ---------------------------------- Save PDF
+    pdf.close()
 
 
 def generate_performance_report(df):
@@ -196,7 +213,7 @@ def generate_performance_report(df):
 
     json_object = json.dumps(report_summary, indent=4)
 
-    print(json_object)
+    # print(json_object)
 
 
 # generate_stock_report()
