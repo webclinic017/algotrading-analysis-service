@@ -11,7 +11,7 @@ import matplotlib.style as mplstyle
 
 mplstyle.use('fast')
 import matplotlib.pyplot as plt
-
+import finplot as fplt
 from fpdf import FPDF
 import mplfinance as mpf
 from pandas import Timestamp
@@ -93,6 +93,8 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                 chart_file_name = file_id + "-" + image_title + '.png'
                 charts_list.append(chart_file_name)
 
+                fplt.candlestick_ochl(cdl[['open', 'close', 'high', 'low']])
+
                 # print(hlines_level)
 
                 # {
@@ -105,16 +107,16 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
 
                 # hlines=dict(hlines=[3080,3121],colors=['g','r'],linestyle='-.')
 
-                fig, axlist = mpf.plot(cdl,
-                                       type='candle',
-                                       hlines=dict(hlines=hlines_level,
-                                                   colors=hlines_color,
-                                                   linestyle=hlines_style,
-                                                   linewidths=1),
-                                       volume=True,
-                                       show_nontrading=True,
-                                       style='yahoo',
-                                       returnfig=True)
+                # fig, axlist = mpf.plot(cdl,
+                #                        type='candle',
+                #                        hlines=dict(hlines=hlines_level,
+                #                                    colors=hlines_color,
+                #                                    linestyle=hlines_style,
+                #                                    linewidths=1),
+                #                        volume=True,
+                #                        show_nontrading=True,
+                #                        style='yahoo',
+                #                        returnfig=True)
 
                 # axlist[0].text(Timestamp("2022-05-31 12:00"), 35640,
                 #                'Custom\nText\nHere')
@@ -123,11 +125,11 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                 #                        type='scatter',
                 #                        markersize=200,
                 #                        marker='^')
-                plt.axis('off')  # command for hiding the axis.
-                fig.tight_layout(pad=0)
-                fig.set_facecolor('red')
+                # plt.axis('off')  # command for hiding the axis.
+                # fig.tight_layout(pad=0)
+                # fig.set_facecolor('red')
 
-                fig.savefig(chart_file_name)
+                # fig.savefig(chart_file_name)
                 # mpf.plot(cdl,
                 #          hlines=hlines,
                 #          type='candle',
@@ -145,7 +147,19 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                 #  ,
                 # addplot=apd)
 
+                def save():
+                    # import io
+                    # f = io.BytesIO()
+                    # fplt.screenshot(f)
+                    fplt.screenshot(open(chart_file_name, 'wb'))
+                    fplt.close()
+
+                fplt.timer_callback(
+                    save, 0.5,
+                    single_shot=True)  # wait some until we're rendered
+                fplt.show()
         # -------------------------------------------------------------------- Append charts to PDF Report
+
         print("Generating PDF with charts #file-prefix-id: ", file_id)
         for image_name in tqdm(charts_list, colour='#13B6D0'):
 
