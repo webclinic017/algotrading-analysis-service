@@ -16,21 +16,12 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                     analysis_algorithm, analysis_symbol,
                     analysis_duration_backward):
 
-    charts_list = []
-
-    file_id = str(random.randint(0, 999999))
-    ftitle = datetime.now().strftime(
-        "%Y-%m-%d__%-I:%M%p"
-    ) + "-" + analysis_symbol + "-" + analysis_duration_backward
-
-    generate_performance_report(result)
-
-    f = os.getcwd() + "/StudyZone/results/" + file_id + "-" + ftitle
-    f = f.replace(' ', '')
-    result.to_csv(f + ".csv", index=False)
+    f, file_id, ftitle = derive_names(analysis_symbol,
+                                      analysis_duration_backward)
+    generate_performance_report(f, result)
 
     # -------------------------------------------------------------------- Generate pdf (with charts)
-
+    charts_list = []
     if plot_images is True:  # ------------------------------------- Draw charts
         print("Generating images #file-prefix-id: ", file_id)
         for dt in tqdm(scan_dates, colour='#4FD4B6'):
@@ -84,7 +75,7 @@ def chart_header_infomartion(df_select):
     return "^" + df_select.iloc[0]["dir"] + "^" + str(res)
 
 
-def generate_performance_report(df):
+def generate_performance_report(f, df):
 
     # print(df.head())
     result = df[df["status"].str.contains("signal-processed") == True]
@@ -127,6 +118,8 @@ def generate_performance_report(df):
         "drawdown_%_(avg)": 0,
     }
 
+    df.to_csv(f + ".csv", index=False)
+
     # json_object = json.dumps(report_summary, indent=4)
 
     # print(json_object)
@@ -152,38 +145,12 @@ def generate_performance_report(df):
 #     return
 
 
-def render_toc(pdf, outline):
-    pdf.y += 50
-    pdf.set_font("Helvetica", size=16)
-    pdf.underline = True
-    p(pdf, "Table of contents:")
-    pdf.underline = False
-    pdf.y += 20
-    pdf.set_font("Courier", size=12)
-    for section in outline:
-        link = pdf.add_link()
-        pdf.set_link(link, page=section.page_number)
-        text = f'{" " * section.level * 2} {section.name}'
-        text += (
-            f' {"." * (60 - section.level*2 - len(section.name))} {section.page_number}'
-        )
-        pdf.multi_cell(
-            w=pdf.epw,
-            h=pdf.font_size,
-            txt=text,
-            new_x="LMARGIN",
-            new_y="NEXT",
-            align="C",
-            link=link,
-        )
+def derive_names(analysis_symbol, analysis_duration_backward):
+    file_id = str(random.randint(0, 999999))
+    ftitle = datetime.now().strftime(
+        "%Y-%m-%d__%-I:%M%p"
+    ) + "-" + analysis_symbol + "-" + analysis_duration_backward
+    f = os.getcwd() + "/StudyZone/results/" + file_id + "-" + ftitle
+    f = f.replace(' ', '')
 
-
-def p(pdf, text, **kwargs):
-    pdf.multi_cell(
-        w=pdf.epw,
-        h=pdf.font_size,
-        txt=text,
-        new_x="LMARGIN",
-        new_y="NEXT",
-        **kwargs,
-    )
+    return f, file_id, ftitle
