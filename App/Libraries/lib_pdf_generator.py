@@ -1,23 +1,7 @@
-from ast import IsNot
 import os
-from unittest import result
-import pandas as pd
-import json
-import random
-import matplotlib
-
-matplotlib.use('Agg')
-import matplotlib.style as mplstyle
-
-mplstyle.use('fast')
-import matplotlib.pyplot as plt
-import finplot as fplt
-from fpdf import FPDF
-import mplfinance as mpf
-from pandas import Timestamp
-
-from datetime import datetime
 from tqdm import tqdm
+from fpdf import FPDF
+from datetime import datetime
 
 import App.DB.tsDB as db
 
@@ -62,12 +46,12 @@ def generate_pdf_report(fname, analysis_symbol, analysis_algorithm, f,
 
         if plot_images:
             pdf.image(image_name,
-                    x=0,
-                    y=20,
-                    h=pdf.eph - 20,
-                    w=pdf.epw,
-                    type='',
-                    link='')
+                      x=0,
+                      y=20,
+                      h=pdf.eph - 20,
+                      w=pdf.epw,
+                      type='',
+                      link='')
             os.remove(image_name)
 
     pdf.output(f + '.pdf', "F")  # ---------------------------------- Save PDF

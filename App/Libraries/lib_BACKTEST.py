@@ -1,10 +1,14 @@
-from ast import IsNot
 import os
-from unittest import result
 import pandas as pd
 import json
 import random
 import matplotlib
+import mplfinance as mpf
+import App.DB.tsDB as db
+
+from tqdm import tqdm
+from pandas import Timestamp
+from datetime import datetime
 
 matplotlib.use('Agg')
 import matplotlib.style as mplstyle
@@ -12,14 +16,7 @@ import matplotlib.style as mplstyle
 mplstyle.use('fast')
 import matplotlib.pyplot as plt
 import finplot as fplt
-from fpdf import FPDF
-import mplfinance as mpf
-from pandas import Timestamp
 
-from datetime import datetime
-from tqdm import tqdm
-
-import App.DB.tsDB as db
 import App.Libraries.lib_pdf_generator as pdfg
 
 
