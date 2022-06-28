@@ -20,6 +20,7 @@ from datetime import datetime
 from tqdm import tqdm
 
 import App.DB.tsDB as db
+import App.Libraries.lib_pdf_generator as pdfg
 
 
 def btResultsParser(env, dbConn, scan_dates, result, plot_images,
@@ -31,7 +32,7 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
 
     file_id = str(random.randint(0, 999999))
     ftitle = datetime.now().strftime(
-        "%Y-%m-%dT%H%M%S"
+        "%Y-%m-%d__%-I:%M%p"
     ) + "-" + analysis_symbol + "-" + analysis_duration_backward
 
     generate_performance_report(result)
@@ -87,8 +88,8 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                             vlines_style.append('-')
 
                             # vlines=dict(vlines='2019-11-18',linewidths=125,alpha=0.4)
-            except Exception as e:
-                print(e)
+            except:
+                dbg_var = ""
 
             if len(cdl):
                 chart_file_name = file_id + "-" + image_title + '.png'
@@ -108,11 +109,7 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                     res = ""
 
                 charts_list.append(chart_file_name + "^" + image_title + "^" +
-                                   df_select.iloc[0]["dir"] + "^" + str(res) +
-                                   "^sdfsdfsdfds")
-                # status, id, date, instr, strategy, dir, entry, target, stoploss, debug
-
-                # subhdr = df_select.iloc[0]["debug"]
+                                   df_select.iloc[0]["dir"] + "^" + str(res))
 
                 # ------------------------------------------------- Generate Images
                 if env['charting_sw'] == "finplot":
@@ -172,52 +169,8 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
 
         # -------------------------------------------------------------------- Append charts to PDF Report
 
-        print("Generating PDF with charts #file-prefix-id: ", file_id)
-        pdf = FPDF()
-        pdf = FPDF(orientation='L', unit='mm', format='A4')
-
-        pdf.add_page()
-        pdf.set_font("helvetica", "B", 16)
-        author = "https://parag-b.github.io/algotrading-exchange-manager/"
-        pdf.set_author(author)
-        pdf.set_fill_color(153, 204, 255)
-        pdf.set_title(file_id + "-" + ftitle)
-
-        pdf.cell(0, 10, analysis_symbol, ln=1, align='C')
-        pdf.cell(0, 10, analysis_algorithm, ln=1, align='C', fill=True)
-        pdf.cell(0,
-                 10,
-                 datetime.now().strftime("%Y-%m-%d %-I:%M:%-S %p"),
-                 ln=1,
-                 align='C')
-
-        # pdf.set_margin(0)
-        pdf.insert_toc_placeholder(render_toc)
-
-        for info_string in tqdm(charts_list, colour='#13B6D0'):
-            pdf.add_page()
-            info_list = info_string.split("^")
-            image_name = info_list.pop(0)
-            header = info_list.pop(0)
-            pdf.start_section(header, level=1)
-            pdf.cell(0, 0, header, ln=1, align='C')
-
-            # pdf.write(h=10, txt=info_list.pop(0), link='', print_sh=False)
-            pdf.set_font(family=None, style='', size=10)
-            for val in info_list:
-                pdf.write(h=10, txt=val + "\t", link='', print_sh=False)
-
-            pdf.image(image_name,
-                      x=0,
-                      y=20,
-                      h=pdf.eph - 20,
-                      w=pdf.epw,
-                      type='',
-                      link='')
-            os.remove(image_name)
-
-    pdf.output(f + '.pdf', "F")  # ---------------------------------- Save PDF
-    pdf.close()
+    pdfg.generate_pdf_report(file_id + "-" + ftitle, analysis_symbol,
+                             analysis_algorithm, f, charts_list, plot_images)
 
 
 def generate_performance_report(df):
