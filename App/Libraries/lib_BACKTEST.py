@@ -2,29 +2,20 @@ import os
 import pandas as pd
 import json
 import random
-import matplotlib
-import mplfinance as mpf
-import App.DB.tsDB as db
 
 from tqdm import tqdm
-from pandas import Timestamp
 from datetime import datetime
 
-matplotlib.use('Agg')
-import matplotlib.style as mplstyle
-
-mplstyle.use('fast')
-import matplotlib.pyplot as plt
-import finplot as fplt
-
+import App.DB.tsDB as db
 import App.Libraries.lib_pdf_generator as pdfg
+import App.Libraries.lib_chart_generator_finplot as fpcg
+import App.Libraries.lib_chart_generator_matplotlib as mplcg
 
 
 def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                     analysis_algorithm, analysis_symbol,
                     analysis_duration_backward):
 
-    myDpi = 200
     charts_list = []
 
     file_id = str(random.randint(0, 999999))
@@ -41,133 +32,56 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
     # -------------------------------------------------------------------- Generate pdf (with charts)
 
     if plot_images is True:  # ------------------------------------- Draw charts
-
         print("Generating images #file-prefix-id: ", file_id)
         for dt in tqdm(scan_dates, colour='#4FD4B6'):
 
-            image_title = analysis_symbol + " " + dt
             cdl = db.getCdlBtwnTime(env, dbConn, analysis_symbol, dt,
                                     ["09:00", "16:00"], "1")
-            df_select = result[result["date"].astype(str).str[:10] == dt]
-
-            hlines_level = []
-            hlines_color = []
-            hlines_style = []
-            vlines_level = []
-            vlines_color = []
-            vlines_style = []
-
-            # {
-            # "variable": "orb_high",
-            # "value": "33233.6",
-            # "drawing": "line",
-            # "draw_fill": "solid",
-            # "draw_color": "green"
-            # }
-
-            try:
-                # print(df_select.iloc[0]["debug"])
-                dbg_var = json.loads(df_select.iloc[0]["debug"])
-                for vars in dbg_var:
-                    if vars['drawing'] == 'hline':
-                        hlines_level.append(float(vars['value-y']))
-                        hlines_color.append(vars['draw_color'])
-                        if vars['draw_fill'] == 'dotted':
-                            hlines_style.append('--')
-                        else:
-                            hlines_style.append('-')
-                    elif vars['drawing'] == 'vline':
-                        vlines_level.append(dt + " " + (vars['value-x']))
-                        vlines_color.append(vars['draw_color'])
-                        if vars['draw_fill'] == 'dotted':
-                            vlines_style.append('--')
-                        else:
-                            vlines_style.append('-')
-
-                            # vlines=dict(vlines='2019-11-18',linewidths=125,alpha=0.4)
-            except:
-                dbg_var = ""
-
             if len(cdl):
+                df_select = result[result["date"].astype(str).str[:10] == dt]
+                try:
+                    dbg_var = json.loads(df_select.iloc[0]["debug"])
+                except:
+                    dbg_var = ""
+
+                image_title = analysis_symbol + " " + dt
                 chart_file_name = file_id + "-" + image_title + '.png'
 
-                if df_select.iloc[0]["dir"] == 'bullish':
-                    res = df_select.iloc[0]["exit"] - df_select.iloc[0]["entry"]
-                elif df_select.iloc[0]["dir"] == 'bearish':
-                    res = df_select.iloc[0]["entry"] - df_select.iloc[0]["exit"]
-                else:
-                    res = 0
+                charts_list.append(chart_file_name + "^" + image_title +
+                                   chart_header_infomartion(df_select))
 
-                if res < 0:
-                    res = 'Loss - ' + str(res)
-                elif res > 0:
-                    res = 'Profit - ' + str(res)
-                else:
-                    res = ""
+                # ---------------------------------------------------------- Generate Images
+                if env['charting_sw'] == "finplot":  # `````````````````````finplot
+                    fpcg.generate_chart(cdl, chart_file_name)
 
-                charts_list.append(chart_file_name + "^" + image_title + "^" +
-                                   df_select.iloc[0]["dir"] + "^" + str(res))
-
-                # ------------------------------------------------- Generate Images
-                if env['charting_sw'] == "finplot":
-
-                    # `````````````````````finplot`````````````````````
-                    fplt.candlestick_ochl(cdl[['open', 'close', 'high',
-                                               'low']])
-
-                    def save():
-                        # import io
-                        # f = io.BytesIO()
-                        # fplt.screenshot(f)
-                        fplt.screenshot(open(chart_file_name, 'wb'))
-                        fplt.close()
-
-                    fplt.timer_callback(
-                        save, 0.4,
-                        single_shot=True)  # wait some until we're rendered
-                    fplt.show()
-
-                else:
-                    # `````````````````````matplotblib`````````````````````
-
-                    fig = mpf.figure(style='yahoo')
-                    fig, axlist = mpf.plot(
-                        cdl,
-                        type='candle',
-                        #    title=image_title,
-                        hlines=dict(hlines=hlines_level,
-                                    colors=hlines_color,
-                                    linestyle=hlines_style,
-                                    linewidths=1,
-                                    alpha=0.4),
-                        vlines=dict(vlines=vlines_level,
-                                    colors=vlines_color,
-                                    linestyle=vlines_style,
-                                    linewidths=1,
-                                    alpha=0.4),
-                        volume=True,
-                        show_nontrading=True,
-                        style='yahoo',
-                        savefig=dict(fname=chart_file_name,
-                                     dpi=myDpi,
-                                     bbox_inches='tight',
-                                     pad_inches=0),
-                        returnfig=True)
-
-                    for vars in dbg_var:  # ---------- print markers/info on chart
-                        axlist[0].text(Timestamp(dt + " " + vars['value-x']),
-                                       float(vars['value-y']),
-                                       str(vars['variable']) + " " +
-                                       str(vars['value-print']),
-                                       alpha=0.5)
-
-                    fig.set_size_inches(18., 11.)
-                    fig.savefig(chart_file_name, dpi=myDpi)
+                else:  # `````````````````````matplotblib
+                    myDpi = 200
+                    mplcg.generate_chart(dt, cdl, chart_file_name, myDpi,
+                                         dbg_var)
 
         # -------------------------------------------------------------------- Append charts to PDF Report
 
     pdfg.generate_pdf_report(file_id + "-" + ftitle, analysis_symbol,
                              analysis_algorithm, f, charts_list, plot_images)
+
+
+# Builds string with split on '^', used by pdf generator for filename, imagename and text to be printed on chart page
+def chart_header_infomartion(df_select):
+    if df_select.iloc[0]["dir"] == 'bullish':
+        res = df_select.iloc[0]["exit"] - df_select.iloc[0]["entry"]
+    elif df_select.iloc[0]["dir"] == 'bearish':
+        res = df_select.iloc[0]["entry"] - df_select.iloc[0]["exit"]
+    else:
+        res = 0
+
+    if res < 0:
+        res = 'Loss - ' + str(res)
+    elif res > 0:
+        res = 'Profit - ' + str(res)
+    else:
+        res = ""
+
+    return "^" + df_select.iloc[0]["dir"] + "^" + str(res)
 
 
 def generate_performance_report(df):
