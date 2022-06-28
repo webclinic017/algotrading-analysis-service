@@ -6,6 +6,7 @@ import App.Libraries.lib_CANDLES as libC
 from os.path import exists
 import os
 import json
+import numpy as np
 
 
 def envVar():
@@ -143,6 +144,11 @@ def readAlgoParams(env, conn, cellValue):
 
 def getCdlBtwnTime(env, conn, symbol, date, timeRange, candleSize):
     # print(datetime.today().date())
+    df = pd.DataFrame()
+
+    if "NaT" in date:
+        return pd.DataFrame()
+
     date_time_obj = datetime.strptime(date, '%Y-%m-%d')
     # print(date_time_obj.date())
 

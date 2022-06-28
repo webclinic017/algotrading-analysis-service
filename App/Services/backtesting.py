@@ -56,7 +56,6 @@ def backtesting(analysis_algorithm, analysis_symbol,
     libBk.btResultsParser(
         env=env,
         dbConn=dbConn,
-        scan_dates=scan_dates,
         result=result,
         plot_images=plot_images,
         analysis_algorithm=analysis_algorithm,

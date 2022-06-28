@@ -12,20 +12,21 @@ import App.Libraries.lib_chart_generator_finplot as fpcg
 import App.Libraries.lib_chart_generator_matplotlib as mplcg
 
 
-def btResultsParser(env, dbConn, scan_dates, result, plot_images,
-                    analysis_algorithm, analysis_symbol,
-                    analysis_duration_backward):
+def btResultsParser(env, dbConn, result, plot_images, analysis_algorithm,
+                    analysis_symbol, analysis_duration_backward):
 
     f, file_id, ftitle = derive_names(analysis_symbol,
                                       analysis_duration_backward)
-    result = result.sort_values(by=['dir'])
+
+    result, dates = get_dir_sorted_dates(result)
+
     generate_performance_report(f, result)
 
     # -------------------------------------------------------------------- Generate pdf (with charts)
     charts_list = []
     if plot_images is True:  # ------------------------------------- Draw charts
         print("Generating images #file-prefix-id: ", file_id)
-        for dt in tqdm(scan_dates, colour='#4FD4B6'):
+        for dt in tqdm(dates, colour='#4FD4B6'):
 
             cdl = db.getCdlBtwnTime(env, dbConn, analysis_symbol, dt,
                                     ["09:00", "16:00"], "1")
@@ -55,6 +56,17 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
 
     pdfg.generate_pdf_report(file_id + "-" + ftitle, analysis_symbol,
                              analysis_algorithm, f, charts_list, plot_images)
+
+
+def get_dir_sorted_dates(result):
+    result = result.sort_values(by=['dir'])
+
+    df = pd.DataFrame()
+    df['date'] = pd.to_datetime(result['date'])
+
+    dates = df['date'].dt.date
+
+    return result, dates.astype(str).tolist()
 
 
 # Builds string with split on '^', used by pdf generator for filename, imagename and text to be printed on chart page

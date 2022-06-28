@@ -1,4 +1,5 @@
 import os
+import math
 from tqdm import tqdm
 from fpdf import FPDF
 from datetime import datetime
@@ -28,8 +29,11 @@ def generate_pdf_report(fname, analysis_symbol, analysis_algorithm, f,
              ln=1,
              align='C')
 
-    # pdf.set_margin(0)
-    pdf.insert_toc_placeholder(render_toc)
+    pdf.add_page()
+    pages = int(round_up(len(charts_list) / 30))
+    # 30 is no of rows in TOC printed based on current setting. Count actual no of lines per page in ToC
+
+    pdf.insert_toc_placeholder(render_toc, pages=pages)
 
     for info_string in tqdm(charts_list, colour='#13B6D0'):
         pdf.add_page()
@@ -58,14 +62,19 @@ def generate_pdf_report(fname, analysis_symbol, analysis_algorithm, f,
     pdf.close()
 
 
+def round_up(n, decimals=0):
+    multiplier = 10**decimals
+    return math.ceil(n * multiplier) / multiplier
+
+
 def render_toc(pdf, outline):
-    pdf.y += 50
+    # pdf.y += 50
     pdf.set_font("Helvetica", size=16)
     pdf.underline = True
     p(pdf, "Table of contents:")
     pdf.underline = False
-    pdf.y += 20
-    pdf.set_font("Courier", size=12)
+    # pdf.y += 20
+    # pdf.set_font("Courier", size=12)
     for section in outline:
         link = pdf.add_link()
         pdf.set_link(link, page=section.page_number)
