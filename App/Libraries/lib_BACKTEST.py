@@ -42,26 +42,6 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
 
     # -------------------------------------------------------------------- Generate pdf (with charts)
 
-    pdf = FPDF()
-    pdf = FPDF(orientation='L', unit='mm', format='A4')
-
-    pdf.add_page()
-    pdf.set_font("helvetica", "B", 16)
-    author = "https://parag-b.github.io/algotrading-exchange-manager/"
-    pdf.set_author(author)
-    pdf.set_fill_color(153, 204, 255)
-    pdf.set_title(file_id + "-" + ftitle)
-
-    pdf.cell(0, 10, analysis_symbol, ln=1, align='C')
-    pdf.cell(0, 10, analysis_algorithm, ln=1, align='C', fill=True)
-    pdf.cell(0,
-             10,
-             datetime.now().strftime("%Y-%m-%d %-I:%M:%-S %p"),
-             ln=1,
-             align='C')
-
-    pdf.set_margin(0)
-
     if plot_images is True:  # ------------------------------------- Draw charts
 
         print("Generating images #file-prefix-id: ", file_id)
@@ -112,7 +92,28 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
 
             if len(cdl):
                 chart_file_name = file_id + "-" + image_title + '.png'
-                charts_list.append(chart_file_name)
+
+                if df_select.iloc[0]["dir"] == 'bullish':
+                    res = df_select.iloc[0]["exit"] - df_select.iloc[0]["entry"]
+                elif df_select.iloc[0]["dir"] == 'bearish':
+                    res = df_select.iloc[0]["entry"] - df_select.iloc[0]["exit"]
+                else:
+                    res = 0
+
+                if res < 0:
+                    res = 'Loss - ' + str(res)
+                elif res > 0:
+                    res = 'Profit - ' + str(res)
+                else:
+                    res = ""
+
+                charts_list.append(chart_file_name + "^" + image_title + "^" +
+                                   df_select.iloc[0]["dir"] + "^" + str(res) +
+                                   "^sdfsdfsdfds")
+                # status, id, date, instr, strategy, dir, entry, target, stoploss, debug
+
+                # subhdr = df_select.iloc[0]["debug"]
+
                 # ------------------------------------------------- Generate Images
                 if env['charting_sw'] == "finplot":
 
@@ -136,27 +137,28 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
                     # `````````````````````matplotblib`````````````````````
 
                     fig = mpf.figure(style='yahoo')
-                    fig, axlist = mpf.plot(cdl,
-                                           type='candle',
-                                           title=image_title,
-                                           hlines=dict(hlines=hlines_level,
-                                                       colors=hlines_color,
-                                                       linestyle=hlines_style,
-                                                       linewidths=1,
-                                                       alpha=0.4),
-                                           vlines=dict(vlines=vlines_level,
-                                                       colors=vlines_color,
-                                                       linestyle=vlines_style,
-                                                       linewidths=1,
-                                                       alpha=0.4),
-                                           volume=True,
-                                           show_nontrading=True,
-                                           style='yahoo',
-                                           savefig=dict(fname=chart_file_name,
-                                                        dpi=myDpi,
-                                                        bbox_inches='tight',
-                                                        pad_inches=0),
-                                           returnfig=True)
+                    fig, axlist = mpf.plot(
+                        cdl,
+                        type='candle',
+                        #    title=image_title,
+                        hlines=dict(hlines=hlines_level,
+                                    colors=hlines_color,
+                                    linestyle=hlines_style,
+                                    linewidths=1,
+                                    alpha=0.4),
+                        vlines=dict(vlines=vlines_level,
+                                    colors=vlines_color,
+                                    linestyle=vlines_style,
+                                    linewidths=1,
+                                    alpha=0.4),
+                        volume=True,
+                        show_nontrading=True,
+                        style='yahoo',
+                        savefig=dict(fname=chart_file_name,
+                                     dpi=myDpi,
+                                     bbox_inches='tight',
+                                     pad_inches=0),
+                        returnfig=True)
 
                     for vars in dbg_var:  # ---------- print markers/info on chart
                         axlist[0].text(Timestamp(dt + " " + vars['value-x']),
@@ -171,16 +173,48 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
         # -------------------------------------------------------------------- Append charts to PDF Report
 
         print("Generating PDF with charts #file-prefix-id: ", file_id)
-        for image_name in tqdm(charts_list, colour='#13B6D0'):
+        pdf = FPDF()
+        pdf = FPDF(orientation='L', unit='mm', format='A4')
+
+        pdf.add_page()
+        pdf.set_font("helvetica", "B", 16)
+        author = "https://parag-b.github.io/algotrading-exchange-manager/"
+        pdf.set_author(author)
+        pdf.set_fill_color(153, 204, 255)
+        pdf.set_title(file_id + "-" + ftitle)
+
+        pdf.cell(0, 10, analysis_symbol, ln=1, align='C')
+        pdf.cell(0, 10, analysis_algorithm, ln=1, align='C', fill=True)
+        pdf.cell(0,
+                 10,
+                 datetime.now().strftime("%Y-%m-%d %-I:%M:%-S %p"),
+                 ln=1,
+                 align='C')
+
+        # pdf.set_margin(0)
+        pdf.insert_toc_placeholder(render_toc)
+
+        for info_string in tqdm(charts_list, colour='#13B6D0'):
+            pdf.add_page()
+            info_list = info_string.split("^")
+            image_name = info_list.pop(0)
+            header = info_list.pop(0)
+            pdf.start_section(header, level=1)
+            pdf.cell(0, 0, header, ln=1, align='C')
+
+            # pdf.write(h=10, txt=info_list.pop(0), link='', print_sh=False)
+            pdf.set_font(family=None, style='', size=10)
+            for val in info_list:
+                pdf.write(h=10, txt=val + "\t", link='', print_sh=False)
+
             pdf.image(image_name,
-                      x=None,
-                      y=None,
-                      h=pdf.eph,
+                      x=0,
+                      y=20,
+                      h=pdf.eph - 20,
                       w=pdf.epw,
                       type='',
                       link='')
             os.remove(image_name)
-            pdf.add_page()
 
     pdf.output(f + '.pdf', "F")  # ---------------------------------- Save PDF
     pdf.close()
@@ -252,3 +286,40 @@ def generate_performance_report(df):
 #     strategy.at[0, 'SMinD'] = strategy.at[0, 'Entry'] - strategy.at[0, 'SMin']
 
 #     return
+
+
+def render_toc(pdf, outline):
+    pdf.y += 50
+    pdf.set_font("Helvetica", size=16)
+    pdf.underline = True
+    p(pdf, "Table of contents:")
+    pdf.underline = False
+    pdf.y += 20
+    pdf.set_font("Courier", size=12)
+    for section in outline:
+        link = pdf.add_link()
+        pdf.set_link(link, page=section.page_number)
+        text = f'{" " * section.level * 2} {section.name}'
+        text += (
+            f' {"." * (60 - section.level*2 - len(section.name))} {section.page_number}'
+        )
+        pdf.multi_cell(
+            w=pdf.epw,
+            h=pdf.font_size,
+            txt=text,
+            new_x="LMARGIN",
+            new_y="NEXT",
+            align="C",
+            link=link,
+        )
+
+
+def p(pdf, text, **kwargs):
+    pdf.multi_cell(
+        w=pdf.epw,
+        h=pdf.font_size,
+        txt=text,
+        new_x="LMARGIN",
+        new_y="NEXT",
+        **kwargs,
+    )
