@@ -18,6 +18,7 @@ def btResultsParser(env, dbConn, scan_dates, result, plot_images,
 
     f, file_id, ftitle = derive_names(analysis_symbol,
                                       analysis_duration_backward)
+    result = result.sort_values(by=['dir'])
     generate_performance_report(f, result)
 
     # -------------------------------------------------------------------- Generate pdf (with charts)

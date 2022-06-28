@@ -9,7 +9,7 @@ def research():
 
     analysis_algorithm = "S001-01-ORB-OpeningRangeBreakout"
     analysis_symbol = "BANKNIFTY-FUT"
-    analysis_duration_backward = "5 days"
+    analysis_duration_backward = "5 months"
     analysis_end_date = "2022-06-01"  # "" for today
 
     bt.backtesting(analysis_algorithm=analysis_algorithm,
