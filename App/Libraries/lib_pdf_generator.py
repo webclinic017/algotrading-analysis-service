@@ -51,12 +51,14 @@ def generate_pdf_report(
 
         # ------------------------------------------ mark new section (bullish/bearish/na/...)
         if section != info_list[0]:
-            pdf.start_section(info_list[0], level=1)
+            pdf.start_section("Charts with " + info_list[0].capitalize(), level=1)
             section = info_list[0]
             subsection_num = 1
 
         # ------------------------------------------ mark new sub-section for individual charts
-        pdf.start_section("    " + str(subsection_num) + " " + header, level=2)
+        pdf.start_section(
+            "   ~ " + str(subsection_num) + " " + header.capitalize(), level=2
+        )
         subsection_num += 1
 
         pdf.cell(0, 0, header, ln=1, align="C")
