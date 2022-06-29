@@ -88,50 +88,7 @@ def chart_header_infomartion(df_select):
     return "^" + df_select.iloc[0]["dir"] + "^" + str(res)
 
 
-def generate_performance_report(f, df):
 
-    # print(df.head())
-    result = df[df["status"].str.contains("signal-processed") == True]
-
-    total_rows = len(df.index)
-    err = df["status"].str.contains(r'ERR').sum()
-    na = df["dir"].str.fullmatch(r'NA').sum(),
-    bullish = df["dir"].str.fullmatch(r'Bullish').sum(),
-    bearish = df["dir"].str.fullmatch(r'Bearish').sum(),
-    failed_bullish = df["dir"].str.fullmatch(r'Failed Bullish').sum(),
-    failed_bearish = df["dir"].str.fullmatch(r'Failed Bearish').sum(),
-
-    report_summary = {
-        "strategy": result.iloc[0]["strategy"],
-        "instrument": result.iloc[0]["instr"],
-        "total_data": total_rows,
-        "data_err %": round((err / total_rows) * 100, 2),
-        "bullish": bullish[0],
-        "bearish": bearish[0],
-        "failed_bullish": failed_bullish[0],
-        "failed_bearish": failed_bearish[0],
-        "na": na[0],
-        "winning": 0,
-        "winning %": 0,
-        "losing": 0,
-        "losing %": 0,
-        "avg_win": 0,
-        "avg_win %": 0,
-        "avg_loss": 0,
-        "avg_loss %": 0,
-        "avg_time": 0,
-        "avg_time_%": 0,
-        "avg_time_(max)": 0,
-        "avg_time_(min)": 0,
-        "drawdown_(max)": 0,
-        "drawdown_%_(max)": 0,
-        "drawdown_(min)": 0,
-        "drawdown_%_(min)": 0,
-        "drawdown_(avg)": 0,
-        "drawdown_%_(avg)": 0,
-    }
-
-    df.to_csv(f + ".csv", index=False)
 
     # json_object = json.dumps(report_summary, indent=4)
 

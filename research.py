@@ -1,3 +1,4 @@
+import pandas as pd
 import App.DB.tsDB as db
 import App.Services.backtesting as bt
 
@@ -22,4 +23,10 @@ def research():
                    plot_images=False)
 
 
-research()
+import App.Libraries.lib_performance_report as pr
+
+pr.generate_performance_report(fin="report.csv",
+                               df=pd.DataFrame(),
+                               fout="test-out")
+
+# research()
