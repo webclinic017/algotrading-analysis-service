@@ -10,6 +10,7 @@ import App.DB.tsDB as db
 import App.Libraries.lib_pdf_generator as pdfg
 import App.Libraries.lib_chart_generator_finplot as fpcg
 import App.Libraries.lib_chart_generator_matplotlib as mplcg
+import App.Libraries.lib_performance_report as pr
 
 
 def btResultsParser(env, dbConn, result, plot_images, analysis_algorithm,
@@ -20,7 +21,7 @@ def btResultsParser(env, dbConn, result, plot_images, analysis_algorithm,
 
     result, dates = get_dir_sorted_dates(result)
 
-    generate_performance_report(f, result)
+    report = pr.generate_performance_report("", result, "test1")
 
     # -------------------------------------------------------------------- Generate pdf (with charts)
     charts_list = []
@@ -55,7 +56,8 @@ def btResultsParser(env, dbConn, result, plot_images, analysis_algorithm,
         # -------------------------------------------------------------------- Append charts to PDF Report
 
     pdfg.generate_pdf_report(file_id + "-" + ftitle, analysis_symbol,
-                             analysis_algorithm, f, charts_list, plot_images)
+                             analysis_algorithm, f, charts_list, plot_images,
+                             report)
 
 
 def get_dir_sorted_dates(result):
@@ -86,9 +88,6 @@ def chart_header_infomartion(df_select):
         res = ""
 
     return "^" + df_select.iloc[0]["dir"] + "^" + str(res)
-
-
-
 
     # json_object = json.dumps(report_summary, indent=4)
 

@@ -8,9 +8,10 @@ import App.DB.tsDB as db
 
 
 def generate_pdf_report(fname, analysis_symbol, analysis_algorithm, f,
-                        charts_list, plot_images):
+                        charts_list, plot_images, report_data):
 
     print("Generating PDF : ", fname + '.pdf')
+    # print(report_data)
     pdf = FPDF()
     pdf = FPDF(orientation='L', unit='mm', format='A4')
 
@@ -30,17 +31,18 @@ def generate_pdf_report(fname, analysis_symbol, analysis_algorithm, f,
              ln=1,
              align='C')
 
-    pdf.add_page()
     pages = int(round_up(len(charts_list) / 30))
     # 30 is no of rows in TOC printed based on current setting. Count actual no of lines per page in ToC
+    # in some bounday case, it may fail. Need to define more tighter logic or precise list on toc/page
 
     pdf.set_text_color(r=155, g=155, b=255)
     if plot_images:
         pdf.insert_toc_placeholder(render_toc, pages=pages)
     pdf.set_text_color(r=0, g=0, b=0)
 
+    generate_report_table(pdf, report_data)
+
     section = ""
-    section_num = 0
     for info_string in tqdm(charts_list, colour='#13B6D0'):
         pdf.add_page()
         info_list = info_string.split("^")
@@ -49,14 +51,11 @@ def generate_pdf_report(fname, analysis_symbol, analysis_algorithm, f,
 
         # new section
         if section != info_list[0]:
-            section_num += 1
-            pdf.start_section(str(section_num) + " " + info_list[0], level=1)
+            pdf.start_section(info_list[0], level=1)
             section = info_list[0]
             subsection_num = 1
 
-        pdf.start_section("    " + str(section_num) + "." +
-                          str(subsection_num) + " " + header,
-                          level=1)
+        pdf.start_section("    " + str(subsection_num) + " " + header, level=2)
         subsection_num += 1
 
         pdf.cell(0, 0, header, ln=1, align='C')
@@ -80,6 +79,45 @@ def generate_pdf_report(fname, analysis_symbol, analysis_algorithm, f,
 
     pdf.output(f + '.pdf', "F")  # ---------------------------------- Save PDF
     pdf.close()
+
+
+def generate_report_table(pdf, report):
+
+    pdf.start_section("Simulation Report", level=1)
+
+    pdf.set_font(size=10)
+    pdf.ln(pdf.font_size * 2)
+
+    line_height = pdf.font_size * 2.5
+    col_width = pdf.epw / 4  # distribute content evenly
+
+    split = 0
+    for row in report.items():
+        if row[0].find('new-section') >= 0:
+            pdf.set_fill_color(253, 242, 233)
+            pdf.set_font(style="B")  # enabling bold text)
+            pdf.cell(0,
+                     8,
+                     row[1].upper(),
+                     border=1,
+                     ln=1,
+                     align='C',
+                     fill=True)
+            pdf.set_font(style="")
+        else:
+            split += 1
+            for datum in row:
+                pdf.multi_cell(col_width,
+                               line_height,
+                               datum.title().replace("_", " "),
+                               border=1,
+                               new_x="RIGHT",
+                               new_y="TOP",
+                               max_line_height=pdf.font_size,
+                               fill=False)
+            if split == 2:
+                pdf.ln(line_height)
+                split = 0
 
 
 def round_up(n, decimals=0):

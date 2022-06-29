@@ -58,7 +58,7 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
 
         results.at[0, "strategy"] = algoID
         results.at[0, "date"] = timeStamp
-
+        results.at[0, "instr"] = symbol
         results.at[0, "status"] = "signal-processed"
 
         # Get ORB
@@ -69,7 +69,6 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
         cdl_926 = df.at[date + " 09:25:00", "close"]
         cdl_926open = df.at[date + " 09:25:00", "open"]
         cdl_930 = df.at[date + " 09:30:00", "close"]
-        results.at[0, "instr"] = symbol
 
         orbDelta = (abs(orb_high - orb_low) * ENTRY_GAP_DELTA_PERCENTAGE) / 100
 
