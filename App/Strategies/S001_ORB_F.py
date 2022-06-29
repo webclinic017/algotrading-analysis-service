@@ -28,14 +28,33 @@ ENTRY_GAP_DELTA_PERCENTAGE = 0
 #
 
 
-def S001_ORB(algoID, mode, symbol, df, date, algoParams, pos_dir,
-             pos_entr_price, pos_entr_time, results):
+def S001_ORB(
+    algoID,
+    mode,
+    symbol,
+    df,
+    date,
+    algoParams,
+    pos_dir,
+    pos_entr_price,
+    pos_entr_time,
+    results,
+):
 
     if mode == "entr":
         S001_ORB_entr(algoID, symbol, df, date, algoParams, results)
     elif mode == "exit":
-        S001_ORB_exit(algoID, symbol, df, date, algoParams, pos_dir,
-                      pos_entr_price, pos_entr_time, results)
+        S001_ORB_exit(
+            algoID,
+            symbol,
+            df,
+            date,
+            algoParams,
+            pos_dir,
+            pos_entr_price,
+            pos_entr_time,
+            results,
+        )
     else:
         results.at[0, "status"] = "ERR: Invalid mode " + mode
 
@@ -76,7 +95,8 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
             if cdl_930 > cdl_926open:  # Green candle
                 results.at[0, "dir"] = "bullish"
                 calVal = cdl_930 + (
-                    (cdl_930 * algoParams["controls"]["target_per"]) / 100)
+                    (cdl_930 * algoParams["controls"]["target_per"]) / 100
+                )
                 # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams['controls']['deep_stoploss_per'] / 100
                 results.at[0, "target"] = calVal
                 results.at[0, "stoploss"] = cdl_926open
@@ -89,7 +109,8 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
             if cdl_930 < cdl_926open:  # Red candle
                 results.at[0, "dir"] = "bearish"
                 results.at[0, "target"] = cdl_930 - (
-                    (cdl_930 * algoParams["controls"]["target_per"]) / 100)
+                    (cdl_930 * algoParams["controls"]["target_per"]) / 100
+                )
                 results.at[0, "stoploss"] = cdl_926open
                 # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams['controls']['deep_stoploss_per'] / 100
                 results.at[0, "entry"] = cdl_930
@@ -107,60 +128,72 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
 
     else:
 
-        debug_list.append({
-            'variable': '<\nanalysis \nstart',
-            'value-x': "09:30",
-            'value-y': str(df['close'].min()),
-            'value-print': '',
-            'drawing': 'vline',
-            'draw_fill': 'dotted',
-            'draw_color': 'cyan'
-        })
-        debug_list.append({
-            'variable': '< \nanalysis \nend',
-            'value-x': "10:00",
-            'value-y': str(df['close'].min()),
-            'value-print': '',
-            'drawing': 'vline',
-            'draw_fill': 'dotted',
-            'draw_color': 'cyan'
-        })
-        debug_list.append({
-            'variable': 'orb_low',
-            'value-x': "10:15",
-            'value-y': str(orb_low),
-            'value-print': str(orb_low),
-            'drawing': 'hline',
-            'draw_fill': 'solid',
-            'draw_color': 'red'
-        })
-        debug_list.append({
-            'variable': 'orb_high',
-            'value-x': "10:15",
-            'value-y': str(orb_high),
-            'value-print': str(orb_high),
-            'drawing': 'hline',
-            'draw_fill': 'solid',
-            'draw_color': 'green'
-        })
-        debug_list.append({
-            'variable': 'cdl_926',
-            'value-x': "10:45",
-            'value-y': str(cdl_926),
-            'value-print': str(cdl_926),
-            'drawing': 'hline',
-            'draw_fill': 'dotted',
-            'draw_color': 'blue'
-        })
-        debug_list.append({
-            'variable': 'cdl_930',
-            'value-x': "10:45",
-            'value-y': str(cdl_930),
-            'value-print': str(cdl_930),
-            'drawing': 'hline',
-            'draw_fill': 'dotted',
-            'draw_color': 'blue'
-        })
+        debug_list.append(
+            {
+                "variable": "<\nanalysis \nstart",
+                "value-x": "09:30",
+                "value-y": str(df["close"].min()),
+                "value-print": "",
+                "drawing": "vline",
+                "draw_fill": "dotted",
+                "draw_color": "cyan",
+            }
+        )
+        debug_list.append(
+            {
+                "variable": "< \nanalysis \nend",
+                "value-x": "10:00",
+                "value-y": str(df["close"].min()),
+                "value-print": "",
+                "drawing": "vline",
+                "draw_fill": "dotted",
+                "draw_color": "cyan",
+            }
+        )
+        debug_list.append(
+            {
+                "variable": "orb_low",
+                "value-x": "10:15",
+                "value-y": str(orb_low),
+                "value-print": str(orb_low),
+                "drawing": "hline",
+                "draw_fill": "solid",
+                "draw_color": "red",
+            }
+        )
+        debug_list.append(
+            {
+                "variable": "orb_high",
+                "value-x": "10:15",
+                "value-y": str(orb_high),
+                "value-print": str(orb_high),
+                "drawing": "hline",
+                "draw_fill": "solid",
+                "draw_color": "green",
+            }
+        )
+        debug_list.append(
+            {
+                "variable": "cdl_926",
+                "value-x": "10:45",
+                "value-y": str(cdl_926),
+                "value-print": str(cdl_926),
+                "drawing": "hline",
+                "draw_fill": "dotted",
+                "draw_color": "blue",
+            }
+        )
+        debug_list.append(
+            {
+                "variable": "cdl_930",
+                "value-x": "10:45",
+                "value-y": str(cdl_930),
+                "value-print": str(cdl_930),
+                "drawing": "hline",
+                "draw_fill": "dotted",
+                "draw_color": "blue",
+            }
+        )
 
         json_object = json.dumps(debug_list)
 
@@ -168,8 +201,17 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
         return results
 
 
-def S001_ORB_exit(algoID, symbol, df, date, algoParams, pos_dir,
-                  pos_entr_price, pos_entr_time, results):
+def S001_ORB_exit(
+    algoID,
+    symbol,
+    df,
+    date,
+    algoParams,
+    pos_dir,
+    pos_entr_price,
+    pos_entr_time,
+    results,
+):
 
     s001_sentiment_analyser(df, pos_entr_time, pos_entr_price)
 
@@ -188,11 +230,13 @@ def S001_ORB_exit(algoID, symbol, df, date, algoParams, pos_dir,
     end_time = start_time.replace(hour=15, minute=16, second=0)
 
     active_cdls = libCdl.filterCandles(
-        df, start_time.strftime("%Y-%m-%d %H:%M:%S"),
-        end_time.strftime("%Y-%m-%d %H:%M:%S"))
+        df,
+        start_time.strftime("%Y-%m-%d %H:%M:%S"),
+        end_time.strftime("%Y-%m-%d %H:%M:%S"),
+    )
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # Bullish
+    # bullish
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if pos_dir.lower() == "bullish":
         # ------------------------------------------------------------------------- scan all candles
@@ -200,27 +244,31 @@ def S001_ORB_exit(algoID, symbol, df, date, algoParams, pos_dir,
 
             # print(row)
             # --------------------------------------------------------------------- trail calculations
-            if row['close'] > pos_entr_price:  # ---------------------------------- if price moved in direction
-                movment = row['close'] - pos_entr_price
+            if (
+                row["close"] > pos_entr_price
+            ):  # ---------------------------------- if price moved in direction
+                movment = row["close"] - pos_entr_price
             else:
                 movment = 0
 
-            if algoParams['controls']['target_trail_enabled']:
+            if algoParams["controls"]["target_trail_enabled"]:
                 target = (pos_entr_price + movment) + tgt
 
-            if algoParams['controls']['stoploss_trail_enabled']:
+            if algoParams["controls"]["stoploss_trail_enabled"]:
                 sl = (pos_entr_price + movment) - stls
 
-            if row['close'] > pos_entr_price + target:  # ------------------------- target hit
+            if (
+                row["close"] > pos_entr_price + target
+            ):  # ------------------------- target hit
                 results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row['close']
+                results.at[0, "exit"] = row["close"]
                 results.at[0, "exit_reason"] = "target"
                 results.at[0, "status"] = "signal-processed"
                 return results
 
-            elif row['close'] < (pos_entr_price - sl):  # -------- stoploss hit
+            elif row["close"] < (pos_entr_price - sl):  # -------- stoploss hit
                 results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row['close']
+                results.at[0, "exit"] = row["close"]
                 results.at[0, "exit_reason"] = "sl/deepsl"
                 results.at[0, "status"] = "signal-processed"
                 return results
@@ -229,45 +277,51 @@ def S001_ORB_exit(algoID, symbol, df, date, algoParams, pos_dir,
         end_time = posentr.replace(hour=15, minute=31, second=0)
 
         eod_cdls = libCdl.filterCandles(
-            df, start_time.strftime("%Y-%m-%d %H:%M:%S"),
-            end_time.strftime("%Y-%m-%d %H:%M:%S"))
+            df,
+            start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            end_time.strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
         if len(eod_cdls):
             row = eod_cdls.iloc[0]
             results.at[0, "exit_time"] = index
-            results.at[0, "exit"] = row['close']
+            results.at[0, "exit"] = row["close"]
             results.at[0, "exit_reason"] = "eod"
             results.at[0, "status"] = "signal-processed"
             return results
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # Bearish
+    # bearish
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     elif pos_dir.lower() == "bearish":
         # ------------------------------------------------------------------------- scan all candles
         for index, row in active_cdls.iterrows():
 
             # --------------------------------------------------------------------- trail calculations
-            if row['close'] < pos_entr_price:  # ---------------------------------- if price moved in direction
-                movment = pos_entr_price - row['close']
+            if (
+                row["close"] < pos_entr_price
+            ):  # ---------------------------------- if price moved in direction
+                movment = pos_entr_price - row["close"]
             else:
                 movment = 0
 
-            if algoParams['controls']['target_trail_enabled']:
+            if algoParams["controls"]["target_trail_enabled"]:
                 target = (pos_entr_price - movment) - tgt
 
-            if algoParams['controls']['stoploss_trail_enabled']:
+            if algoParams["controls"]["stoploss_trail_enabled"]:
                 sl = (pos_entr_price - movment) + stls
 
-            if row['close'] > pos_entr_price + target:  # ------------------------- target hit
+            if (
+                row["close"] > pos_entr_price + target
+            ):  # ------------------------- target hit
                 results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row['close']
+                results.at[0, "exit"] = row["close"]
                 results.at[0, "exit_reason"] = "target"
                 results.at[0, "status"] = "signal-processed"
                 return results
-            elif row['close'] < (pos_entr_price - sl):  # -------- stoploss hit
+            elif row["close"] < (pos_entr_price - sl):  # -------- stoploss hit
                 results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row['close']
+                results.at[0, "exit"] = row["close"]
                 results.at[0, "exit_reason"] = "sl/deepsl"
                 results.at[0, "status"] = "signal-processed"
                 return results
@@ -276,13 +330,15 @@ def S001_ORB_exit(algoID, symbol, df, date, algoParams, pos_dir,
         end_time = posentr.replace(hour=15, minute=31, second=0)
 
         eod_cdls = libCdl.filterCandles(
-            df, start_time.strftime("%Y-%m-%d %H:%M:%S"),
-            end_time.strftime("%Y-%m-%d %H:%M:%S"))
+            df,
+            start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            end_time.strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
         if len(eod_cdls):
             row = eod_cdls.iloc[0]
             results.at[0, "exit_time"] = index
-            results.at[0, "exit"] = row['close']
+            results.at[0, "exit"] = row["close"]
             results.at[0, "exit_reason"] = "eod"
             results.at[0, "status"] = "signal-processed"
             return results
@@ -298,7 +354,7 @@ def s001_sentiment_analyser(df, pos_entr_time, pos_entr_price):
     # stall detect period
     # position reversal period
 
-    #print(period)
+    # print(period)
     # 1. count green/red candles. > 50% gives direction
     # 2. size of green/red determines the force in the direction
     # 3. Return interpreted status

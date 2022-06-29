@@ -12,11 +12,11 @@ from App.Libraries.lib_BACKTEST import btResultsParser
 def IntraDay_Directional_NakedPosition (dayDF, selectedDate, strategy):
 
     # # if signal received
-    # if strategyScan.at[0, 'Signal'] == 'Bullish' or strategyScan.at[0, 'Signal'] == 'Bearish':
+    # if strategyScan.at[0, 'Signal'] == 'bullish' or strategyScan.at[0, 'Signal'] == 'bearish':
         
     #     pPositionReversal = strategy.at[0, 'PositionRevarsal']
     #     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    #     # Bullish
+    #     # bullish
     #     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      
         

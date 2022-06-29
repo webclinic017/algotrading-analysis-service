@@ -5,13 +5,13 @@ import pandas as pd
 def fn_gains(row):
 
     val = np.nan
-
-    if row["dir"] == "bearish":
-        val = row["entry"] - row["exit"]
-    elif row["dir"] == "bullish":
-        val = row["exit"] - row["entry"]
-
-    return val
+    try:
+        if row["dir"] == "bearish":
+            val = row["entry"] - row["exit"]
+        elif row["dir"] == "bullish":
+            val = row["exit"] - row["entry"]
+    finally:
+        return val
 
 
 def generate_performance_report(fin, df, fout):
@@ -28,12 +28,12 @@ def generate_performance_report(fin, df, fout):
     result.to_csv(fout + ".csv")
 
     total_rows = len(df.index)
-    err = result["status"].str.contains(r"ERR").sum()
-    na = result["dir"].str.fullmatch(r"na").sum()
-    bullish = result["dir"].str.fullmatch(r"bullish").sum()
-    bearish = result["dir"].str.fullmatch(r"bearish").sum()
-    failed_bullish = result["dir"].str.fullmatch(r"failed bullish").sum()
-    failed_bearish = result["dir"].str.fullmatch(r"failed bearish").sum()
+    err_count = result["status"].str.contains(r"ERR").sum()
+    na_count = result["dir"].str.fullmatch(r"na").sum()
+    bullish_count = result["dir"].str.fullmatch(r"bullish").sum()
+    bearish_count = result["dir"].str.fullmatch(r"bearish").sum()
+    failed_bullish_count = result["dir"].str.fullmatch(r"failed bullish").sum()
+    failed_bearish_count = result["dir"].str.fullmatch(r"failed bearish").sum()
     total_gain = round(result.loc[result["exit_reason"] == "target"]["gain"].sum(), 1)
     total_gain_mean = round(
         result.loc[result["exit_reason"] == "target"]["gain"].mean(), 1
@@ -44,23 +44,29 @@ def generate_performance_report(fin, df, fout):
     total_loss_mean = round(
         result.loc[result["exit_reason"] == "sl/deepsl"]["gain"].mean(), 1
     )
-    # total_gain_mean = round(df["gain"].mean(), 2)
+    total_pts = total_gain + total_loss
 
-    win = result["exit_reason"].str.fullmatch(r"target").sum()
-
-    target_sum = result["exit_reason"].str.fullmatch(r"target").sum()
-    sl_sum = result["exit_reason"].str.fullmatch(r"sl/deepsl").sum()
-    total_trades = target_sum + sl_sum
+    win_count = result["exit_reason"].str.fullmatch(r"target").sum()
+    sl_count = result["exit_reason"].str.fullmatch(r"sl/deepsl").sum()
+    eod_count = result["exit_reason"].str.fullmatch(r"eod").sum()
+    total_trades_count = win_count + sl_count + eod_count
 
     report_summary = {
         "new-section-info": "info",
         "strategy": result.iloc[0]["strategy"],
         "instrument": result.iloc[0]["instr"],
-        "new-section-winlose": "winlose",
-        "strike ratio": "Target : " + str(target_sum) + "  Stop Loss : " + str(sl_sum),
-        "total": str(total_trades),
-        "winning_%": str(round((target_sum * 100 / total_trades), 0)) + "%",
-        "losing_%": str(round((sl_sum * 100 / total_trades), 0)) + "%",
+        "new-section-win-loss": "win-loss",
+        "strike ratio": "Target : "
+        + str(win_count)
+        + "  Stop Loss : "
+        + str(sl_count)
+        + "  EoD : "
+        + str(eod_count),
+        "total": str(total_trades_count),
+        "winning_%": str(round((win_count * 100 / total_trades_count), 0)) + "%",
+        "losing_%": str(round((sl_count * 100 / total_trades_count), 0)) + "%",
+        "total_points_(win+loss)": str(total_pts),
+        # "avg total point (win+loss)": str(total_pts),
         "new-section-avg": "avg",
         "win_avg": str(total_gain_mean),
         "win_total": str(total_gain),
@@ -75,21 +81,13 @@ def generate_performance_report(fin, df, fout):
         "drawdown_max": str(0),
         "new-section-data": "data",
         "total_data": str(total_rows),
-        "data_err %": str(round((err / total_rows) * 100, 2)),
-        # "new-section-stats":
-        # 'stats',
-        # "bullish":
-        # str(bullish[0]),
-        # "bearish":
-        # str(bearish[0]),
-        # "failed_bullish":
-        # str(failed_bullish[0]),
-        # "failed_bearish":
-        # str(failed_bearish[0]),
-        # "na":
-        # str(na[0]),
-        # "none":
-        # "none",
+        "data_err %": str(round((err_count / total_rows) * 100, 2)),
+        "new-section-stats": "stats",
+        "bullish": str(bullish_count),
+        "bearish": str(bearish_count),
+        "failed_bullish": str(failed_bullish_count),
+        "failed_bearish": str(failed_bearish_count),
+        "na": str(na_count),
     }
 
     return report_summary
