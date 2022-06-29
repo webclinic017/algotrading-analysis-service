@@ -32,6 +32,11 @@ def backtesting(analysis_algorithm, analysis_symbol,
                             pos_entr_time="",
                             trading=trading_mode)  # get all entry calls
         df_r = df_entr
+        if len(df_entr) > 1:
+            print(
+                "Fatal error - Expected 1 result form signal analysis, actual ",
+                len(df_entr))
+            return
 
         if df_entr.at[0, 'dir'] == 'Bullish' or df_entr.at[0,
                                                            'dir'] == 'Bearish':

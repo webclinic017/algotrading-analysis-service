@@ -126,14 +126,13 @@ def readAlgoParams(env, conn, cellValue):
         ap2 = ap1[0]['parameters']
 
         # convert to floats
-        ap2['controls']['target_per'] = float(ap2['controls']['target_per'] /
-                                              100)
+        ap2['controls']['target_per'] = float(ap2['controls']['target_per'])
 
         ap2['controls']['stoploss_per'] = float(
-            ap2['controls']['stoploss_per'] / 100)
+            ap2['controls']['stoploss_per'])
 
         ap2['controls']['budget_max_per'] = float(
-            ap2['controls']['budget_max_per'] / 100)
+            ap2['controls']['budget_max_per'])
 
     except Exception as e:
         print('tsDb.py - Read error for ', e)
