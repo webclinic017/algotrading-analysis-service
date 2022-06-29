@@ -13,11 +13,17 @@ import App.Libraries.lib_chart_generator_matplotlib as mplcg
 import App.Libraries.lib_performance_report as pr
 
 
-def btResultsParser(env, dbConn, result, plot_images, analysis_algorithm,
-                    analysis_symbol, analysis_duration_backward):
+def btResultsParser(
+    env,
+    dbConn,
+    result,
+    plot_images,
+    analysis_algorithm,
+    analysis_symbol,
+    analysis_duration_backward,
+):
 
-    f, file_id, ftitle = get_filenames(analysis_symbol,
-                                       analysis_duration_backward)
+    f, file_id, ftitle = get_filenames(analysis_symbol, analysis_duration_backward)
 
     result, dates = sort_dates_on_direction(result)
 
@@ -27,10 +33,11 @@ def btResultsParser(env, dbConn, result, plot_images, analysis_algorithm,
     charts_list = []
     if plot_images is True:  # ------------------------------------- Draw charts
         print("Generating images #file-prefix-id: ", file_id)
-        for dt in tqdm(dates, colour='#4FD4B6'):
+        for dt in tqdm(dates, colour="#4FD4B6"):
 
-            cdl = db.getCdlBtwnTime(env, dbConn, analysis_symbol, dt,
-                                    ["09:00", "16:00"], "1")
+            cdl = db.getCdlBtwnTime(
+                env, dbConn, analysis_symbol, dt, ["09:00", "16:00"], "1"
+            )
             if len(cdl):
                 df_select = result[result["date"].astype(str).str[:10] == dt]
                 try:
@@ -39,35 +46,44 @@ def btResultsParser(env, dbConn, result, plot_images, analysis_algorithm,
                     dbg_var = ""
 
                 image_title = analysis_symbol + " " + dt
-                chart_file_name = file_id + "-" + image_title + '.png'
+                chart_file_name = file_id + "-" + image_title + ".png"
 
-                charts_list.append(chart_file_name + "^" + image_title +
-                                   chart_header_infomartion(df_select))
+                charts_list.append(
+                    chart_file_name
+                    + "^"
+                    + image_title
+                    + chart_header_infomartion(df_select)
+                )
 
                 # ---------------------------------------------------------- Generate Images
-                if env['charting_sw'] == "finplot":  # `````````````````````finplot
+                if env["charting_sw"] == "finplot":  # `````````````````````finplot
                     fpcg.generate_chart(cdl, chart_file_name)
 
                 else:  # `````````````````````matplotblib
                     myDpi = 200
-                    mplcg.generate_chart(dt, cdl, chart_file_name, myDpi,
-                                         dbg_var)
+                    mplcg.generate_chart(dt, cdl, chart_file_name, myDpi, dbg_var)
 
         # -------------------------------------------------------------------- Append charts to PDF Report
 
-    pdfg.generate_pdf_report(file_id + "-" + ftitle, analysis_symbol,
-                             analysis_algorithm, f, charts_list, plot_images,
-                             report)
+    pdfg.generate_pdf_report(
+        file_id + "-" + ftitle,
+        analysis_symbol,
+        analysis_algorithm,
+        f,
+        charts_list,
+        plot_images,
+        report,
+    )
 
 
 # sort the results based on 'dir', used to club same category reports
 def sort_dates_on_direction(result):
-    result = result.sort_values(by=['dir'])
+    result = result.sort_values(by=["dir"])
 
     df = pd.DataFrame()
-    df['date'] = pd.to_datetime(result['date'])
+    df["date"] = pd.to_datetime(result["date"])
 
-    dates = df['date'].dt.date
+    dates = df["date"].dt.date
 
     return result, dates.astype(str).tolist()
 
@@ -75,17 +91,17 @@ def sort_dates_on_direction(result):
 # Builds string with split on '^', used by pdf generator for filename,
 # imagename and text to be printed on chart page
 def chart_header_infomartion(df_select):
-    if df_select.iloc[0]["dir"] == 'bullish':
-        res = df_select.iloc[0]["exit"] - df_select.iloc[0]["entry"]
-    elif df_select.iloc[0]["dir"] == 'bearish':
-        res = df_select.iloc[0]["entry"] - df_select.iloc[0]["exit"]
+    if df_select.iloc[0]["dir"] == "bullish":
+        res = round(df_select.iloc[0]["exit"] - df_select.iloc[0]["entry"], 1)
+    elif df_select.iloc[0]["dir"] == "bearish":
+        res = round(df_select.iloc[0]["entry"] - df_select.iloc[0]["exit"], 1)
     else:
         res = 0
 
     if res < 0:
-        res = 'Loss - ' + str(res)
+        res = "Loss " + str(res)
     elif res > 0:
-        res = 'Profit - ' + str(res)
+        res = "Profit " + str(res)
     else:
         res = ""
 
@@ -114,10 +130,14 @@ def chart_header_infomartion(df_select):
 
 def get_filenames(analysis_symbol, analysis_duration_backward):
     file_id = str(random.randint(0, 999999))
-    ftitle = datetime.now().strftime(
-        "%Y-%m-%d__%-I:%M%p"
-    ) + "-" + analysis_symbol + "-" + analysis_duration_backward
+    ftitle = (
+        datetime.now().strftime("%Y-%m-%d__%-I:%M%p")
+        + "-"
+        + analysis_symbol
+        + "-"
+        + analysis_duration_backward
+    )
     f = os.getcwd() + "/StudyZone/results/" + file_id + "-" + ftitle
-    f = f.replace(' ', '')
+    f = f.replace(" ", "")
 
     return f, file_id, ftitle

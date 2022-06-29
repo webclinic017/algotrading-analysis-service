@@ -22,10 +22,15 @@ def generate_performance_report(fin, df, fout):
     result = df[df["status"].str.contains("signal-processed") == True]
     result = result.fillna(0)
 
+    # result.to_csv("test.csv")
+    result.to_csv(fout + ".csv")
+
+    if "exit_reason" not in result.columns:
+        result["exit_reason"] = "data err - col missing"
+        result["exit"] = result["entry"]
+
     # create new column 'Good' using the function above
     result["gain"] = result.apply(fn_gains, axis=1)
-
-    result.to_csv(fout + ".csv")
 
     total_rows = len(df.index)
     err_count = result["status"].str.contains(r"ERR").sum()
