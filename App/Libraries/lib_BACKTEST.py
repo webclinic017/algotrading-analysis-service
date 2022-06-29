@@ -16,12 +16,12 @@ import App.Libraries.lib_performance_report as pr
 def btResultsParser(env, dbConn, result, plot_images, analysis_algorithm,
                     analysis_symbol, analysis_duration_backward):
 
-    f, file_id, ftitle = derive_names(analysis_symbol,
-                                      analysis_duration_backward)
+    f, file_id, ftitle = get_filenames(analysis_symbol,
+                                       analysis_duration_backward)
 
-    result, dates = get_dir_sorted_dates(result)
+    result, dates = sort_dates_on_direction(result)
 
-    report = pr.generate_performance_report("", result, "test1")
+    report = pr.generate_performance_report("", result, f)
 
     # -------------------------------------------------------------------- Generate pdf (with charts)
     charts_list = []
@@ -60,7 +60,8 @@ def btResultsParser(env, dbConn, result, plot_images, analysis_algorithm,
                              report)
 
 
-def get_dir_sorted_dates(result):
+# sort the results based on 'dir', used to club same category reports
+def sort_dates_on_direction(result):
     result = result.sort_values(by=['dir'])
 
     df = pd.DataFrame()
@@ -71,7 +72,8 @@ def get_dir_sorted_dates(result):
     return result, dates.astype(str).tolist()
 
 
-# Builds string with split on '^', used by pdf generator for filename, imagename and text to be printed on chart page
+# Builds string with split on '^', used by pdf generator for filename,
+# imagename and text to be printed on chart page
 def chart_header_infomartion(df_select):
     if df_select.iloc[0]["dir"] == 'bullish':
         res = df_select.iloc[0]["exit"] - df_select.iloc[0]["entry"]
@@ -88,10 +90,6 @@ def chart_header_infomartion(df_select):
         res = ""
 
     return "^" + df_select.iloc[0]["dir"] + "^" + str(res)
-
-    # json_object = json.dumps(report_summary, indent=4)
-
-    # print(json_object)
 
 
 # generate_stock_report()
@@ -114,7 +112,7 @@ def chart_header_infomartion(df_select):
 #     return
 
 
-def derive_names(analysis_symbol, analysis_duration_backward):
+def get_filenames(analysis_symbol, analysis_duration_backward):
     file_id = str(random.randint(0, 999999))
     ftitle = datetime.now().strftime(
         "%Y-%m-%d__%-I:%M%p"

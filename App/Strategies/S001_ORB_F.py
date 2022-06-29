@@ -74,7 +74,7 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
 
         if cdl_930 > (orb_high + orbDelta):
             if cdl_930 > cdl_926open:  # Green candle
-                results.at[0, "dir"] = "Bullish"
+                results.at[0, "dir"] = "bullish"
                 calVal = cdl_930 + (
                     (cdl_930 * algoParams["controls"]["target_per"]) / 100)
                 # results.at[0, "DeepStopLoss"] = cdl_930 * algoParams['controls']['deep_stoploss_per'] / 100
@@ -83,11 +83,11 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
                 results.at[0, "entry"] = cdl_930
                 results.at[0, "entry_time"] = timeStamp
             else:
-                results.at[0, "dir"] = "Failed Bullish"
+                results.at[0, "dir"] = "failed bullish"
 
         elif cdl_930 < (orb_low - orbDelta):
             if cdl_930 < cdl_926open:  # Red candle
-                results.at[0, "dir"] = "Bearish"
+                results.at[0, "dir"] = "bearish"
                 results.at[0, "target"] = cdl_930 - (
                     (cdl_930 * algoParams["controls"]["target_per"]) / 100)
                 results.at[0, "stoploss"] = cdl_926open
@@ -95,14 +95,14 @@ def S001_ORB_entr(algoID, symbol, df, date, algoParams, results):
                 results.at[0, "entry"] = cdl_930
                 results.at[0, "entry_time"] = timeStamp
             else:
-                results.at[0, "dir"] = "Failed Bearish"
+                results.at[0, "dir"] = "failed bearish"
 
         else:
-            results.at[0, "dir"] = "NA"
+            results.at[0, "dir"] = "na"
 
     except Exception as e:
         # print("Data Error", date)
-        results.at[0, "dir"] = "Data Error"
+        results.at[0, "dir"] = "data error"
         return results
 
     else:

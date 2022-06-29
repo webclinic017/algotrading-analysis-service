@@ -10,7 +10,7 @@ def research():
 
     analysis_algorithm = "S001-01-ORB-OpeningRangeBreakout"
     analysis_symbol = "BANKNIFTY-FUT"
-    analysis_duration_backward = "5 days"
+    analysis_duration_backward = "5 months"
     analysis_end_date = "2022-06-01"  # "" for today
 
     bt.backtesting(analysis_algorithm=analysis_algorithm,
@@ -23,10 +23,13 @@ def research():
                    plot_images=False)
 
 
-# import App.Libraries.lib_performance_report as pr
+import App.Libraries.lib_performance_report as pr
 
-# pr.generate_performance_report(fin="report.csv",
-#                                df=pd.DataFrame(),
-#                                fout="test-out")
+print(
+    pr.generate_performance_report(
+        fin=
+        "/config/workspace/algotrading-analysis-service/StudyZone/results/318796-2022-06-29__3:04PM-BANKNIFTY-FUT-5months.csv",
+        df=pd.DataFrame(),
+        fout="test-out"))
 
-research()
+# research()
