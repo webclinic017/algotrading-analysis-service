@@ -12,7 +12,7 @@ def controlStopLoss(activeCdls, strategy):
     pSl = strategy.at[0, 'StopLoss']
     pSlDeep = float(strategy.at[0, 'DeepStopLoss'])    
     
-    if strategy.at[0, 'Signal'] == 'Bullish':
+    if strategy.at[0, 'Signal'] == 'bullish':
         
         slDF = pd.DataFrame()
         pSl =  (strategy.at[0, 'StopLoss']) - (strategy.at[0, 'DeepStopLoss'])
@@ -76,7 +76,7 @@ def jumpToActiveCandles(dayDF, selectedDate, strategy):
     
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# EoD exit - Common Routine ? (right now part of Bullish)
+# EoD exit - Common Routine ? (right now part of bullish)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if np.isnan(strategy.at[0, 'Exit']):
     mask = cdlDF.index >  selectedDate + ' 15:15' #blank space required for string of date/time

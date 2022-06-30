@@ -30,7 +30,7 @@ def return_success_test(algo, symbol, df, date, algoParams, results):
     results.at[0, "strategy"] = algo
     results.at[0, "date"] = timeStamp
     results.at[0, "instr"] = symbol
-    results.at[0, "dir"] = "Bullish"
+    results.at[0, "dir"] = "bullish"
     results.at[0, "target"] = 100
     results.at[0, "stoploss"] = 200
     results.at[0, "trigger_value"] = 300

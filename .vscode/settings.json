@@ -1,6 +1,6 @@
 {
     "editor.formatOnSave": true,
-    "python.formatting.provider": "yapf",
+    "python.formatting.provider": "black",
     "files.exclude": {
         "**/__init__.py": true,
         "**/__pycache__": true

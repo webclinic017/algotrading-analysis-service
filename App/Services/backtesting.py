@@ -38,8 +38,8 @@ def backtesting(analysis_algorithm, analysis_symbol,
                 len(df_entr))
             return
 
-        if df_entr.at[0, 'dir'] == 'Bullish' or df_entr.at[0,
-                                                           'dir'] == 'Bearish':
+        if df_entr.at[0, 'dir'] == 'bullish' or df_entr.at[0,
+                                                           'dir'] == 'bearish':
 
             df_exit = s.execute(env=env,
                                 dbConn=dbConn,
