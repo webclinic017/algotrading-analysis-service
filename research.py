@@ -7,9 +7,9 @@ def research():
     env = db.envVar()
     dbConn = db.dbConnect(env)
 
-    analysis_algorithm = "S001-01-ORB-OpeningRangeBreakout"
+    analysis_algorithm = "S002-01-ORB-IMM-CROSSOVER"
     analysis_symbol = "BANKNIFTY-FUT"
-    analysis_duration_backward = "5 months"
+    analysis_duration_backward = "2 days"
     analysis_end_date = "2022-06-01"  # "" for today
 
     bt.backtesting(analysis_algorithm=analysis_algorithm,

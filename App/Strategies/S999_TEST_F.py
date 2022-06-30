@@ -16,7 +16,7 @@ from pytz import timezone
 from tzlocal import get_localzone
 
 
-def S999_TEST(algo, symbol, df, date, algoParams, results):
+def return_success_test(algo, symbol, df, date, algoParams, results):
 
     import pytz, datetime
 
