@@ -20,74 +20,74 @@ def envVar():
         f = open(credentials_file, "r")
         credentials = json.load(f)
         f.close()
-        dict['charting_sw'] = credentials['CHARTING_SW']
-        dict['database'] = credentials[credentials['DB_PROFILE']]['NAME']
-        dict['host'] = credentials[credentials['DB_PROFILE']]['ADDRESS']
-        dict['user'] = credentials[credentials['DB_PROFILE']]['USERNAME']
-        dict['password'] = credentials[credentials['DB_PROFILE']]['PASSWORD']
-        dict['port'] = credentials[credentials['DB_PROFILE']]['PORT']
+        dict["charting_sw"] = credentials["CHARTING_SW"]
+        dict["database"] = credentials[credentials["DB_PROFILE"]]["NAME"]
+        dict["host"] = credentials[credentials["DB_PROFILE"]]["ADDRESS"]
+        dict["user"] = credentials[credentials["DB_PROFILE"]]["USERNAME"]
+        dict["password"] = credentials[credentials["DB_PROFILE"]]["PASSWORD"]
+        dict["port"] = credentials[credentials["DB_PROFILE"]]["PORT"]
 
-        if credentials['TEST_MODE'] == True:
-            dict['tst'] = credentials['DB_TABLES']['TEST_POSTFIX']
+        if credentials["TEST_MODE"] == True:
+            dict["tst"] = credentials["DB_TABLES"]["TEST_POSTFIX"]
         else:
-            dict['tst'] = ""
+            dict["tst"] = ""
 
-        dict['upre'] = credentials['DB_TABLES']['PREFIX_USER_ID']
-        dict['tbl_instruments'] = credentials['DB_TABLES']['INSTRUMENTS']
-        dict['tbl_tick_nsefut'] = credentials['DB_TABLES']['TICK_NSEFUT']
-        dict['tbl_tick_nsestk'] = credentials['DB_TABLES']['TICK_NSESTK']
-        dict['tbl_user_setting'] = credentials['DB_TABLES']['USER_SETTING']
-        dict['tbl_user_symbols'] = credentials['DB_TABLES']['USER_SYMBOLS']
-        dict['tbl_orderbook'] = credentials['DB_TABLES']['ORDER_BOOK']
-        dict['tbl_usr_strategies'] = credentials['DB_TABLES'][
-            'USER_STRATEGIES']
+        dict["upre"] = credentials["DB_TABLES"]["PREFIX_USER_ID"]
+        dict["tbl_instruments"] = credentials["DB_TABLES"]["INSTRUMENTS"]
+        dict["tbl_tick_nsefut"] = credentials["DB_TABLES"]["TICK_NSEFUT"]
+        dict["tbl_tick_nsestk"] = credentials["DB_TABLES"]["TICK_NSESTK"]
+        dict["tbl_user_setting"] = credentials["DB_TABLES"]["USER_SETTING"]
+        dict["tbl_user_symbols"] = credentials["DB_TABLES"]["USER_SYMBOLS"]
+        dict["tbl_orderbook"] = credentials["DB_TABLES"]["ORDER_BOOK"]
+        dict["tbl_usr_strategies"] = credentials["DB_TABLES"]["USER_STRATEGIES"]
 
     else:
-        dict['database'] = os.getenv('TIMESCALEDB_NAME'),
-        dict['host'] = os.getenv('TIMESCALEDB_ADDRESS'),
-        dict['user'] = os.getenv('TIMESCALEDB_USER'),
-        dict['password'] = os.getenv('TIMESCALEDB_PASSWORD'),
-        dict['port'] = os.getenv('TIMESCALEDB_PORT')
+        print("reading from env docker env")
 
-        if os.getenv('TEST_MODE') == True:
-            dict['tst'] = os.getenv('DB_TEST_POSTFIX')
+        dict["database"] = os.getenv("TIMESCALEDB_NAME")
+        dict["host"] = os.getenv("TIMESCALEDB_ADDRESS")
+        dict["user"] = os.getenv("TIMESCALEDB_USER")
+        dict["password"] = os.getenv("TIMESCALEDB_PASSWORD")
+        dict["port"] = os.getenv("TIMESCALEDB_PORT")
+
+        if os.getenv("TEST_MODE") == True:
+            dict["tst"] = os.getenv("DB_TEST_POSTFIX")
         else:
-            dict['tst'] = ""
+            dict["tst"] = ""
 
-        dict['upre'] = os.getenv('DB_TBL_PREFIX_USER_ID')
-        dict['tbl_instruments'] = os.getenv('DB_TBL_INSTRUMENTS')
-        dict['tbl_tick_nsefut'] = os.getenv('DB_TBL_TICK_NSEFUT')
-        dict['tbl_tick_nsestk'] = os.getenv('DB_TBL_TICK_NSESTK')
-        dict['tbl_user_setting'] = os.getenv('DB_TBL_USER_SETTING')
-        dict['tbl_user_symbols'] = os.getenv('DB_TBL_USER_SYMBOLS')
-        dict['tbl_orderbook'] = os.getenv('DB_TBL_ORDER_BOOK')
-        dict['tbl_usr_strategies'] = os.getenv('DB_TBL_USER_STRATEGIES')
+        dict["upre"] = os.getenv("DB_TBL_PREFIX_USER_ID")
+        dict["tbl_instruments"] = os.getenv("DB_TBL_INSTRUMENTS")
+        dict["tbl_tick_nsefut"] = os.getenv("DB_TBL_TICK_NSEFUT")
+        dict["tbl_tick_nsestk"] = os.getenv("DB_TBL_TICK_NSESTK")
+        dict["tbl_user_setting"] = os.getenv("DB_TBL_USER_SETTING")
+        dict["tbl_user_symbols"] = os.getenv("DB_TBL_USER_SYMBOLS")
+        dict["tbl_orderbook"] = os.getenv("DB_TBL_ORDER_BOOK")
+        dict["tbl_usr_strategies"] = os.getenv("DB_TBL_USER_STRATEGIES")
 
+    print(dict)
 
-# Update Table Names ------------------
-    dict['tbl_tick_nsefut'] = dict['tbl_tick_nsefut'] + dict['tst']
-    dict['tbl_tick_nsestk'] = dict['tbl_tick_nsestk'] + dict['tst']
+    # Update Table Names ------------------
+    dict["tbl_tick_nsefut"] = dict["tbl_tick_nsefut"] + dict["tst"]
+    dict["tbl_tick_nsestk"] = dict["tbl_tick_nsestk"] + dict["tst"]
 
     # Tables with user id + test name
-    dict['tbl_user_setting'] = dict['upre'] + dict['tbl_user_setting'] + dict[
-        'tst']
-    dict['tbl_user_symbols'] = dict['upre'] + dict['tbl_user_symbols'] + dict[
-        'tst']
-    dict['tbl_usr_strategies'] = dict['upre'] + dict[
-        'tbl_usr_strategies'] + dict['tst']
-    dict['tbl_orderbook'] = dict['upre'] + dict['tbl_orderbook'] + dict['tst']
+    dict["tbl_user_setting"] = dict["upre"] + dict["tbl_user_setting"] + dict["tst"]
+    dict["tbl_user_symbols"] = dict["upre"] + dict["tbl_user_symbols"] + dict["tst"]
+    dict["tbl_usr_strategies"] = dict["upre"] + dict["tbl_usr_strategies"] + dict["tst"]
+    dict["tbl_orderbook"] = dict["upre"] + dict["tbl_orderbook"] + dict["tst"]
 
     return dict
 
 
 def dbConnect(env):  # connect to database
 
-    db_url = 'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}'.format(
-        database=env['database'],
-        host=env['host'],
-        user=env['user'],
-        password=env['password'],
-        port=env['port'])
+    db_url = "postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}".format(
+        database=env["database"],
+        host=env["host"],
+        user=env["user"],
+        password=env["password"],
+        port=env["port"],
+    )
 
     return sqlalchemy.create_engine(db_url)
 
@@ -99,7 +99,7 @@ def get_dates_list(conn, date_start, date_end):
         sql = f"SELECT DISTINCT DATE_TRUNC('day', time) AS dates FROM candles_1min ORDER BY dates DESC"
 
     df = pd.read_sql(text(sql), conn)
-    return df['dates'].astype(str).tolist()
+    return df["dates"].astype(str).tolist()
 
 
 def db_table_exists(conn, tablename):
@@ -123,19 +123,17 @@ def readAlgoParams(env, conn, cellValue):
             return None
 
         ap1 = ap.to_records(index=False)
-        ap2 = ap1[0]['parameters']
+        ap2 = ap1[0]["parameters"]
 
         # convert to floats
-        ap2['controls']['target_per'] = float(ap2['controls']['target_per'])
+        ap2["controls"]["target_per"] = float(ap2["controls"]["target_per"])
 
-        ap2['controls']['stoploss_per'] = float(
-            ap2['controls']['stoploss_per'])
+        ap2["controls"]["stoploss_per"] = float(ap2["controls"]["stoploss_per"])
 
-        ap2['controls']['budget_max_per'] = float(
-            ap2['controls']['budget_max_per'])
+        ap2["controls"]["budget_max_per"] = float(ap2["controls"]["budget_max_per"])
 
     except Exception as e:
-        print('tsDb.py - Read error for ', e)
+        print("tsDb.py - Read error for ", e)
         return None
 
     return ap2
@@ -148,11 +146,11 @@ def getCdlBtwnTime(env, conn, symbol, date, timeRange, candleSize):
     if "NaT" in date:
         return pd.DataFrame()
 
-    date_time_obj = datetime.strptime(date, '%Y-%m-%d')
+    date_time_obj = datetime.strptime(date, "%Y-%m-%d")
     # print(date_time_obj.date())
 
-    startDT = date + ' ' + timeRange[0]
-    endDT = date + ' ' + timeRange[1]
+    startDT = date + " " + timeRange[0]
+    endDT = date + " " + timeRange[1]
 
     if date_time_obj.date() == datetime.today().date():
         sql = f"SELECT * FROM {env['tbl_tick_nsestk']} WHERE ((time BETWEEN '{startDT}' AND '{endDT}') AND symbol LIKE '%{symbol}%') UNION ALL SELECT * FROM {env['tbl_tick_nsefut']} WHERE ((time BETWEEN '{startDT}' AND '{endDT}')  AND symbol LIKE '%{symbol}%')"
@@ -187,16 +185,19 @@ def fetchTicks(conn, current_date, table):
 
 
 def updateTable(conn, table, df):
-    df.to_sql(table, conn, if_exists='append')
+    df.to_sql(table, conn, if_exists="append")
 
 
 # drop table if exists, then create table and insert data
 def saveInstrumentsToDB(env, conn, df):
-    if (db_table_exists(conn, env['tbl_instruments'])) == True:
+    if (db_table_exists(conn, env["tbl_instruments"])) == True:
         sql = f"DROP TABLE {env['tbl_instruments']};"
         conn.execute(sql)
 
-    sqlQuery = """CREATE TABLE """ + env['tbl_instruments'] + """ (
+    sqlQuery = (
+        """CREATE TABLE """
+        + env["tbl_instruments"]
+        + """ (
                         instrument_token INTEGER NOT NULL,
                         exchange_token INTEGER NOT NULL,
                         tradingsymbol TEXT NOT NULL,
@@ -210,8 +211,9 @@ def saveInstrumentsToDB(env, conn, df):
                         segment VARCHAR(10) NULL,
                         exchange VARCHAR(10) NULL
                     );"""
+    )
     conn.execute(sqlQuery)
-    df.to_sql(env['tbl_instruments'], conn, if_exists='replace', index=False)
+    df.to_sql(env["tbl_instruments"], conn, if_exists="replace", index=False)
 
 
 def createAllTables(conn):

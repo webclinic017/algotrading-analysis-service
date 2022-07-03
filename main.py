@@ -27,7 +27,7 @@ tsDB.createAllTables(dbConn)
 @app.get("/")
 def read_root():
     return {
-        "Info": "algotrading-analysis-service v0.3.0-beta (Rel Date: 03-July-2022) [00]"
+        "Info": "algotrading-analysis-service v0.3.3-beta (Rel Date: 03-July-2022) [00]"
     }
 
 
@@ -89,4 +89,6 @@ def read_item(algo: str, symbol: str, startdate: str, enddate: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=5000, reload=True)
+    uvicorn.run(
+        "main:app", host="0.0.0.0", port=5000, reload=True, timeout_keep_alive=10
+    )
