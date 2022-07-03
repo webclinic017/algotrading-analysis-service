@@ -1,4 +1,3 @@
-import pandas as pd
 import App.DB.tsDB as db
 import App.Services.backtesting as bt
 
@@ -25,6 +24,7 @@ def research():
     )
 
 
+# import pandas as pd
 # import App.Libraries.lib_performance_report as pr
 
 # print(

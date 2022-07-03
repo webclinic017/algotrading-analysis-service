@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseModel
 from App.Strategies import Strategies
 from App.Engine import Engines
-from App.Services import Services
+from App.Services import services
 from App.DB import tsDB
 import App.Services.backtesting as bt
 
@@ -27,14 +27,13 @@ tsDB.createAllTables(dbConn)
 @app.get("/")
 def read_root():
     return {
-        "Info":
-        "algotrading-analysis-service v0.2.0-beta (Rel Date: 26-June-2022) [00]"
+        "Info": "algotrading-analysis-service v0.3.0-beta (Rel Date: 03-July-2022) [00]"
     }
 
 
 @app.get("/services/")
 def read_item(sid: str, date: Optional[str] = None):
-    return Services.execute(env, dbConn, sid, date)
+    return services.execute(env, dbConn, sid, date)
 
 
 @app.get("/tradesignals/")
@@ -47,26 +46,39 @@ def read_item(
     pos_entr_price: Optional[float] = None,
     pos_entr_time: Optional[str] = None,
 ):
-    return Strategies.execute(env, dbConn, mode, algo, symbol, date,
-                              pos_entr_price, pos_entr_time, LIVE_TRADING)
+    return Strategies.execute(
+        env,
+        dbConn,
+        mode,
+        algo,
+        symbol,
+        date,
+        pos_entr_price,
+        pos_entr_time,
+        LIVE_TRADING,
+    )
 
 
 @app.get("/simulation/")
-def read_item(analysis_algorithm: str = 'S001-01-ORB-OpeningRangeBreakout',
-              analysis_symbol: str = "BANKNIFTY-FUT",
-              analysis_duration_backward: str = "6 weeks",
-              analysis_end_date: Optional[str] = None,
-              plot_images: bool = False):
+def read_item(
+    analysis_algorithm: str = "S001-01-ORB-OpeningRangeBreakout",
+    analysis_symbol: str = "BANKNIFTY-FUT",
+    analysis_duration_backward: str = "6 weeks",
+    analysis_end_date: Optional[str] = None,
+    plot_images: bool = False,
+):
 
     ret = 2
-    bt.backtesting(analysis_algorithm=analysis_algorithm,
-                   analysis_symbol=analysis_symbol,
-                   analysis_duration_backward=analysis_duration_backward,
-                   analysis_end_date=analysis_end_date,
-                   dbConn=dbConn,
-                   env=env,
-                   trading_mode=False,
-                   plot_images=plot_images)
+    bt.backtesting(
+        analysis_algorithm=analysis_algorithm,
+        analysis_symbol=analysis_symbol,
+        analysis_duration_backward=analysis_duration_backward,
+        analysis_end_date=analysis_end_date,
+        dbConn=dbConn,
+        env=env,
+        trading_mode=False,
+        plot_images=plot_images,
+    )
     return {"signals": ret}
 
 
