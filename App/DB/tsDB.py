@@ -64,8 +64,6 @@ def envVar():
         dict["tbl_orderbook"] = os.getenv("DB_TBL_ORDER_BOOK")
         dict["tbl_usr_strategies"] = os.getenv("DB_TBL_USER_STRATEGIES")
 
-    print(dict)
-
     # Update Table Names ------------------
     dict["tbl_tick_nsefut"] = dict["tbl_tick_nsefut"] + dict["tst"]
     dict["tbl_tick_nsestk"] = dict["tbl_tick_nsestk"] + dict["tst"]
@@ -172,8 +170,16 @@ def fetchCandlesOnDate(conn, symbol, date, candleSize):
     return pd.read_sql(text(sql), conn)
 
 
-def fetchTicksData(env, conn, current_date):
-    sql = f"SELECT  * FROM {env['tbl_tick_nsestk']} WHERE CAST(time AS date) = '{current_date}' UNION ALL SELECT * FROM {env['tbl_tick_nsefut']} WHERE CAST(time AS date) = '{current_date}'"
+def fetchTicksData(env, conn, current_date, table):
+    if table == "stk":
+        table = env["tbl_tick_nsestk"]
+        sql = f"SELECT * FROM {env['tbl_tick_nsestk']} WHERE CAST(time AS date) = '{current_date}'"
+    elif table == "fut":
+        table = env["tbl_tick_nsefut"]
+        sql = f"SELECT * FROM {env['tbl_tick_nsefut']} WHERE CAST(time AS date) = '{current_date}'"
+    else:
+        sql = f"SELECT  * FROM {env['tbl_tick_nsestk']} WHERE CAST(time AS date) = '{current_date}' UNION ALL SELECT * FROM {env['tbl_tick_nsefut']} WHERE CAST(time AS date) = '{current_date}'"
+
     df = pd.read_sql(sql, conn)
     return df
 

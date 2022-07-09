@@ -32,8 +32,12 @@ def read_root():
 
 
 @app.get("/services/")
-def read_item(sid: str, date: Optional[str] = None):
-    return services.execute(env, dbConn, sid, date)
+def read_item(
+    sid: str = "create_candles_day",
+    date: Optional[str] = None,
+    table: Optional[str] = "stk",
+):
+    return services.execute(env, dbConn, sid, date, table)
 
 
 @app.get("/tradesignals/")

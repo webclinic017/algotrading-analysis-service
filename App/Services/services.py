@@ -5,12 +5,12 @@ import pandas as pd
 import json
 
 
-def execute(env, dbConn, sid, date):
+def execute(env, dbConn, sid, date, table):
 
     if sid == "instruments":
         results = LoadInstruments(env, dbConn)
     elif sid == "create_candles_day":
-        result = Create1MinCandlesInDb(env, dbConn, date)
+        result = Create1MinCandlesInDb(env, dbConn, date, table)
         d = json.dumps(result, indent=4)
         p = json.loads(d)
         return p  # return JSON data - API caller

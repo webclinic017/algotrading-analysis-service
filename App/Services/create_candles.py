@@ -12,58 +12,64 @@ import sys
 # Function works if called on next day,
 # if called on same day, getCdlBtwnTime --> provdies ticks data - causing failure
 # calling next day, reads form 1min table --> provide null data if candles not present
-def Create1MinCandlesInDb(env, dbconn, date):
+def Create1MinCandlesInDb(env, dbconn, date, table):
 
     dict = {"result": "ok", "error": "nil"}
 
     #  function return ticks if called on same day as
-    cdl = db.getCdlBtwnTime(env, dbconn, "", date, ["09:00", "16:00"], "1")
-    if len(cdl) > 0:
-        dict["result"] = "fail"
-        dict["error"] = (
-            "Candles are present in table for " + date + ", skipping operation"
+    # cdl = db.getCdlBtwnTime(env, dbconn, "", date, ["09:00", "16:00"], "1")
+    # if len(cdl) > 0:
+    #     dict["result"] = "fail"
+    #     dict["error"] = (
+    #         "Candles are present in table for " + date + ", skipping operation"
+    #     )
+    # return dict
+    if table == "fut" or table == "stk":
+        df = db.fetchTicksData(env, dbconn, date, table)
+        if len(df) == 0:
+            dict["result"] = "fail"
+            dict["error"] = "No ticks found for " + date
+            return dict
+
+        df = libCdl.TickToCdl(df, date, "1T")
+
+        tsDB.updateTable(dbconn, "candles_1min", df)
+
+        script_dir = os.path.abspath(os.path.dirname(sys.argv[0]) or ".")
+        csvPath = script_dir + "/Data/candle_converter/"
+
+    if table == "fut":
+
+        dfFut = df[df["symbol"].str.contains("-FUT") == True]
+        f = (
+            csvPath
+            + date
+            + " ( Symbols "
+            + str(len(dfFut.symbol.unique()))
+            + " - Rows "
+            + str(len(dfFut))
+            + " ).csv"
         )
-        return dict
 
-    df = tsDB.fetchTicksData(env, dbconn, date)
-    if len(df) == 0:
+        dfFut.to_csv(f, index=True)
+        dict["ticks_nsefut"] = f.replace(csvPath, "")
+
+    elif table == "stk":
+        dfStk = df[df["symbol"].str.contains("-FUT") == False]
+        f = (
+            csvPath
+            + date
+            + " ( Symbols "
+            + str(len(dfStk.symbol.unique()))
+            + " - Rows "
+            + str(len(dfStk))
+            + " ).csv"
+        )
+
+        dfStk.to_csv(f, index=True)
+        dict["ticks_nsestk"] = f.replace(csvPath, "")
+
+    else:
         dict["result"] = "fail"
-        dict["error"] = "No ticks found for " + date
-        return dict
-
-    df = libCdl.TickToCdl(df, date, "1T")
-
-    tsDB.updateTable(dbconn, "candles_1min", df)
-
-    script_dir = os.path.abspath(os.path.dirname(sys.argv[0]) or ".")
-    csvPath = script_dir + "/Data/candle_converter/"
-
-    dfFut = df[df["symbol"].str.contains("-FUT") == True]
-    f = (
-        csvPath
-        + date
-        + " ( Symbols "
-        + str(len(dfFut.symbol.unique()))
-        + " - Rows "
-        + str(len(dfFut))
-        + " ).csv"
-    )
-
-    dfFut.to_csv(f, index=True)
-    dict["ticks_nsefut"] = f.replace(csvPath, "")
-
-    dfStk = df[df["symbol"].str.contains("-FUT") == False]
-    f = (
-        csvPath
-        + date
-        + " ( Symbols "
-        + str(len(dfStk.symbol.unique()))
-        + " - Rows "
-        + str(len(dfStk))
-        + " ).csv"
-    )
-
-    dfStk.to_csv(f, index=True)
-    dict["ticks_nsestk"] = f.replace(csvPath, "")
-
+        dict["error"] = "invalid table selected > " + table + ", skipping operation"
     return dict
