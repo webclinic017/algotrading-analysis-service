@@ -90,6 +90,7 @@ def generate_report_table(pdf, report):
 
     split = 0
     for row in report.items():
+        # BUG: this is wrong probably , need iterrows ???
         if row[0].find("new-section") >= 0:
             if split == 1:  # odd no of cells, print a line to reserve space
                 pdf.ln(8)

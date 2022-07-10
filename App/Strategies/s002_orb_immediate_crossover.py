@@ -19,14 +19,33 @@ from datetime import datetime, timedelta
 import App.Libraries.lib_CANDLES as libCdl
 
 
-def analysis(algoID, mode, symbol, df, date, algoParams, pos_dir,
-             pos_entr_price, pos_entr_time, results):
+def analysis(
+    algoID,
+    mode,
+    symbol,
+    df,
+    date,
+    algoParams,
+    pos_dir,
+    pos_entr_price,
+    pos_entr_time,
+    results,
+):
 
     if mode == "entr":
         _entr(algoID, symbol, df, date, algoParams, results)
     elif mode == "exit":
-        _exit(algoID, symbol, df, date, algoParams, pos_dir, pos_entr_price,
-              pos_entr_time, results)
+        _exit(
+            algoID,
+            symbol,
+            df,
+            date,
+            algoParams,
+            pos_dir,
+            pos_entr_price,
+            pos_entr_time,
+            results,
+        )
     else:
         results.at[0, "status"] = "ERR: Invalid mode " + mode
 
@@ -37,22 +56,59 @@ def _entr(algoID, symbol, df, date, algoParams, results):
 
     debug_list = []
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Minimum data to be returned - status,date,instr,strategy,dir |
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     results.at[0, "instr"] = symbol
     results.at[0, "strategy"] = algoID
     results.at[0, "date"] = trade_date(date)
     results.at[0, "status"] = "pending"
     results.at[0, "dir"] = "NA"
-    #-------------------------------------------------------------
+    # -------------------------------------------------------------
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Strategy                                                    |
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     try:
-        print("place holder")
+
+        orb = df.between_time("9:15", "9:30")
+        # print(check)
+
+        # Get ORB
+        orb_low = orb["low"].min()
+        orb_high = orb["high"].max()
+
+        data = df.between_time("9:30", "15:15")
+        c = list(data)
+        c.insert(0, "dt-idx")  # add the datetime index
+
+        for row in data.itertuples():
+            cl = row[c.index("close")]
+            gap = algoParams["algo_specific"]["enter_confirmation_per"]
+            high = orb_high + (orb_high * gap / 100)
+            low = orb_low - (orb_low * gap / 100)
+            # print(row)
+            if cl > high:
+                tgt = cl + ((cl * algoParams["controls"]["target_per"]) / 100)
+                sl = cl - ((cl * algoParams["controls"]["stoploss_per"]) / 100)
+
+                results.at[0, "target"] = tgt
+                results.at[0, "stoploss"] = sl
+                results.at[0, "entry"] = row[c.index("close")]
+                results.at[0, "entry_time"] = row[0]  # time is the index
+                results.at[0, "dir"] = "bullish"
+                break
+            elif cl < low:
+                tgt = cl - ((cl * algoParams["controls"]["target_per"]) / 100)
+                sl = cl + ((cl * algoParams["controls"]["stoploss_per"]) / 100)
+
+                results.at[0, "target"] = tgt
+                results.at[0, "stoploss"] = sl
+                results.at[0, "entry"] = row[c.index("close")]
+                results.at[0, "entry_time"] = row[0]  # time is the index
+                results.at[0, "dir"] = "bearish"
+                break
 
     except Exception as e:
         results.at[0, "dir"] = "Data Error"
@@ -60,15 +116,28 @@ def _entr(algoID, symbol, df, date, algoParams, results):
 
     finally:
 
-        debug_list.append({
-            'variable': 'none',
-            'value-x': "09:30",
-            'value-y': str(0),
-            'value-print': '',
-            'drawing': 'vline',
-            'draw_fill': 'dotted',
-            'draw_color': 'purple'
-        })
+        debug_list.append(
+            {
+                "variable": "orb_low",
+                "value-x": "09:30",
+                "value-y": str(orb_low),
+                "value-print": "",
+                "drawing": "vline",
+                "draw_fill": "dotted",
+                "draw_color": "purple",
+            }
+        )
+        debug_list.append(
+            {
+                "variable": "orb_high",
+                "value-x": "09:30",
+                "value-y": str(orb_high),
+                "value-print": "",
+                "drawing": "vline",
+                "draw_fill": "dotted",
+                "draw_color": "purple",
+            }
+        )
 
         json_object = json.dumps(debug_list)
 
@@ -76,21 +145,17 @@ def _entr(algoID, symbol, df, date, algoParams, results):
         return results
 
 
-def debug_list_add(dbg, var, vx, vy, val_print, drwg, drw_fill, drw_clr):
-    dbg.append({
-        'variable': var,
-        'value-x': vx,
-        'value-y': str(vy),
-        'value-print': str(val_print),
-        'drawing': drwg,
-        'draw_fill': drw_fill,
-        'draw_color': drw_clr
-    })
-    return dbg
-
-
-def _exit(algoID, symbol, df, date, algoParams, pos_dir, pos_entr_price,
-          pos_entr_time, results):
+def _exit(
+    algoID,
+    symbol,
+    df,
+    date,
+    algoParams,
+    pos_dir,
+    pos_entr_price,
+    pos_entr_time,
+    results,
+):
 
     s001_sentiment_analyser(df, pos_entr_time, pos_entr_price)
 
@@ -109,8 +174,10 @@ def _exit(algoID, symbol, df, date, algoParams, pos_dir, pos_entr_price,
     end_time = start_time.replace(hour=15, minute=16, second=0)
 
     active_cdls = libCdl.filterCandles(
-        df, start_time.strftime("%Y-%m-%d %H:%M:%S"),
-        end_time.strftime("%Y-%m-%d %H:%M:%S"))
+        df,
+        start_time.strftime("%Y-%m-%d %H:%M:%S"),
+        end_time.strftime("%Y-%m-%d %H:%M:%S"),
+    )
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Bullish
@@ -121,27 +188,31 @@ def _exit(algoID, symbol, df, date, algoParams, pos_dir, pos_entr_price,
 
             # print(row)
             # --------------------------------------------------------------------- trail calculations
-            if row['close'] > pos_entr_price:  # ---------------------------------- if price moved in direction
-                movment = row['close'] - pos_entr_price
+            if (
+                row["close"] > pos_entr_price
+            ):  # ---------------------------------- if price moved in direction
+                movment = row["close"] - pos_entr_price
             else:
                 movment = 0
 
-            if algoParams['controls']['target_trail_enabled']:
+            if algoParams["controls"]["target_trail_enabled"]:
                 target = (pos_entr_price + movment) + tgt
 
-            if algoParams['controls']['stoploss_trail_enabled']:
+            if algoParams["controls"]["stoploss_trail_enabled"]:
                 sl = (pos_entr_price + movment) - stls
 
-            if row['close'] > pos_entr_price + target:  # ------------------------- target hit
+            if (
+                row["close"] > pos_entr_price + target
+            ):  # ------------------------- target hit
                 results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row['close']
+                results.at[0, "exit"] = row["close"]
                 results.at[0, "exit_reason"] = "target"
                 results.at[0, "status"] = "signal-processed"
                 return results
 
-            elif row['close'] < (pos_entr_price - sl):  # -------- stoploss hit
+            elif row["close"] < (pos_entr_price - sl):  # -------- stoploss hit
                 results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row['close']
+                results.at[0, "exit"] = row["close"]
                 results.at[0, "exit_reason"] = "sl/deepsl"
                 results.at[0, "status"] = "signal-processed"
                 return results
@@ -150,13 +221,15 @@ def _exit(algoID, symbol, df, date, algoParams, pos_dir, pos_entr_price,
         end_time = posentr.replace(hour=15, minute=31, second=0)
 
         eod_cdls = libCdl.filterCandles(
-            df, start_time.strftime("%Y-%m-%d %H:%M:%S"),
-            end_time.strftime("%Y-%m-%d %H:%M:%S"))
+            df,
+            start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            end_time.strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
         if len(eod_cdls):
             row = eod_cdls.iloc[0]
             results.at[0, "exit_time"] = index
-            results.at[0, "exit"] = row['close']
+            results.at[0, "exit"] = row["close"]
             results.at[0, "exit_reason"] = "eod"
             results.at[0, "status"] = "signal-processed"
             return results
@@ -169,26 +242,30 @@ def _exit(algoID, symbol, df, date, algoParams, pos_dir, pos_entr_price,
         for index, row in active_cdls.iterrows():
 
             # --------------------------------------------------------------------- trail calculations
-            if row['close'] < pos_entr_price:  # ---------------------------------- if price moved in direction
-                movment = pos_entr_price - row['close']
+            if (
+                row["close"] < pos_entr_price
+            ):  # ---------------------------------- if price moved in direction
+                movment = pos_entr_price - row["close"]
             else:
                 movment = 0
 
-            if algoParams['controls']['target_trail_enabled']:
+            if algoParams["controls"]["target_trail_enabled"]:
                 target = (pos_entr_price - movment) - tgt
 
-            if algoParams['controls']['stoploss_trail_enabled']:
+            if algoParams["controls"]["stoploss_trail_enabled"]:
                 sl = (pos_entr_price - movment) + stls
 
-            if row['close'] > pos_entr_price + target:  # ------------------------- target hit
+            if (
+                row["close"] > pos_entr_price + target
+            ):  # ------------------------- target hit
                 results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row['close']
+                results.at[0, "exit"] = row["close"]
                 results.at[0, "exit_reason"] = "target"
                 results.at[0, "status"] = "signal-processed"
                 return results
-            elif row['close'] < (pos_entr_price - sl):  # -------- stoploss hit
+            elif row["close"] < (pos_entr_price - sl):  # -------- stoploss hit
                 results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row['close']
+                results.at[0, "exit"] = row["close"]
                 results.at[0, "exit_reason"] = "sl/deepsl"
                 results.at[0, "status"] = "signal-processed"
                 return results
@@ -197,13 +274,15 @@ def _exit(algoID, symbol, df, date, algoParams, pos_dir, pos_entr_price,
         end_time = posentr.replace(hour=15, minute=31, second=0)
 
         eod_cdls = libCdl.filterCandles(
-            df, start_time.strftime("%Y-%m-%d %H:%M:%S"),
-            end_time.strftime("%Y-%m-%d %H:%M:%S"))
+            df,
+            start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            end_time.strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
         if len(eod_cdls):
             row = eod_cdls.iloc[0]
             results.at[0, "exit_time"] = index
-            results.at[0, "exit"] = row['close']
+            results.at[0, "exit"] = row["close"]
             results.at[0, "exit_reason"] = "eod"
             results.at[0, "status"] = "signal-processed"
             return results

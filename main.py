@@ -35,7 +35,7 @@ def read_root():
 def read_item(
     sid: str = "create_candles_day",
     date: Optional[str] = None,
-    table: Optional[str] = "stk",
+    table: Optional[str] = "all",
 ):
     return services.execute(env, dbConn, sid, date, table)
 

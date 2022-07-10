@@ -24,21 +24,21 @@ def Create1MinCandlesInDb(env, dbconn, date, table):
     #         "Candles are present in table for " + date + ", skipping operation"
     #     )
     # return dict
-    if table == "fut" or table == "stk":
-        df = db.fetchTicksData(env, dbconn, date, table)
-        if len(df) == 0:
-            dict["result"] = "fail"
-            dict["error"] = "No ticks found for " + date
-            return dict
 
-        df = libCdl.TickToCdl(df, date, "1T")
+    df = db.fetchTicksData(env, dbconn, date, table)
+    if len(df) == 0:
+        dict["result"] = "fail"
+        dict["error"] = "No ticks found for " + date
+        return dict
 
-        tsDB.updateTable(dbconn, "candles_1min", df)
+    df = libCdl.TickToCdl(df, date, "1T")
 
-        script_dir = os.path.abspath(os.path.dirname(sys.argv[0]) or ".")
-        csvPath = script_dir + "/Data/candle_converter/"
+    tsDB.updateTable(dbconn, "candles_1min", df)
 
-    if table == "fut":
+    script_dir = os.path.abspath(os.path.dirname(sys.argv[0]) or ".")
+    csvPath = script_dir + "/Data/candle_converter/"
+
+    if table == "fut" or table == "all":
 
         dfFut = df[df["symbol"].str.contains("-FUT") == True]
         f = (
@@ -54,7 +54,7 @@ def Create1MinCandlesInDb(env, dbconn, date, table):
         dfFut.to_csv(f, index=True)
         dict["ticks_nsefut"] = f.replace(csvPath, "")
 
-    elif table == "stk":
+    if table == "stk" or table == "all":
         dfStk = df[df["symbol"].str.contains("-FUT") == False]
         f = (
             csvPath
@@ -69,7 +69,7 @@ def Create1MinCandlesInDb(env, dbconn, date, table):
         dfStk.to_csv(f, index=True)
         dict["ticks_nsestk"] = f.replace(csvPath, "")
 
-    else:
+    if table != "stk" or table != "fut" or table != "all":
         dict["result"] = "fail"
         dict["error"] = "invalid table selected > " + table + ", skipping operation"
     return dict
