@@ -119,29 +119,54 @@ def _entr(algoID, symbol, df, date, algoParams, results):
         debug_list.append(
             {
                 "variable": "orb_low",
-                "value-x": "09:30",
+                "value-x": "08:30",
                 "value-y": str(orb_low),
-                "value-print": "",
-                "drawing": "vline",
-                "draw_fill": "dotted",
-                "draw_color": "purple",
+                "value-print": str(orb_low),
+                "drawing": "hline",
+                "draw_fill": "solid",
+                "draw_color": "red",
             }
         )
         debug_list.append(
             {
                 "variable": "orb_high",
-                "value-x": "09:30",
+                "value-x": "08:30",
                 "value-y": str(orb_high),
-                "value-print": "",
-                "drawing": "vline",
-                "draw_fill": "dotted",
-                "draw_color": "purple",
+                "value-print": str(orb_high),
+                "drawing": "hline",
+                "draw_fill": "solid",
+                "draw_color": "green",
             }
         )
 
+        debug_list.append(
+            {
+                "variable": "sl",
+                "value-x": "08:30",
+                "value-y": str(results.at[0, "stoploss"]),
+                "value-print": str(results.at[0, "stoploss"]),
+                "drawing": "hline.",
+                "draw_fill": "solid",
+                "draw_color": "orange",
+            }
+        )
+
+        if results.at[0, "dir"] != "NA":
+            debug_list.append(
+                {
+                    "variable": "⚡ entry",
+                    "value-x": str(results.at[0, "entry_time"].time()),
+                    "value-y": str(results.at[0, "entry"]),
+                    "value-print": str(results.at[0, "entry"]),
+                    "drawing": "vline",
+                    "draw_fill": "solid",
+                    "draw_color": "blue",
+                }
+            )
+
         json_object = json.dumps(debug_list)
 
-        results.at[0, "debug"] = json_object
+        results.at[0, "debug_entr"] = json_object
         return results
 
 
@@ -157,20 +182,21 @@ def _exit(
     results,
 ):
 
+    debug_list = []
     s001_sentiment_analyser(df, pos_entr_time, pos_entr_price)
 
     # --------------------------------------------------------------------- sl & target
-    stls = (algoParams["controls"]["stoploss_per"]) * pos_entr_price
-    tgt = (algoParams["controls"]["target_per"]) * pos_entr_price
+    stls = (algoParams["controls"]["stoploss_per"] / 100) * pos_entr_price
+    tgt = (algoParams["controls"]["target_per"] / 100) * pos_entr_price
 
     # --------------------------------------------------------------------- filter cdl (with delayed sl)
     dly_sl = algoParams["controls"]["delayed_stoploss_seconds"]
-    posentr = datetime.strptime(pos_entr_time, "%Y-%m-%d %H:%M:%S")
+    # posentr = datetime.strptime(pos_entr_time, "%Y-%m-%d %H:%M:%S")
 
     if dly_sl != 0:
-        start_time = posentr + timedelta(seconds=dly_sl)
+        start_time = pos_entr_time + timedelta(seconds=dly_sl)
     else:
-        start_time = posentr
+        start_time = pos_entr_time
     end_time = start_time.replace(hour=15, minute=16, second=0)
 
     active_cdls = libCdl.filterCandles(
@@ -182,6 +208,7 @@ def _exit(
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Bullish
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    movment = 0
     if pos_dir.lower() == "bullish":
         # ------------------------------------------------------------------------- scan all candles
         for index, row in active_cdls.iterrows():
@@ -191,9 +218,11 @@ def _exit(
             if (
                 row["close"] > pos_entr_price
             ):  # ---------------------------------- if price moved in direction
-                movment = row["close"] - pos_entr_price
-            else:
-                movment = 0
+                curr_mov = row["close"] - pos_entr_price
+                if curr_mov > movment:  # new movement higher than previous
+                    movment = curr_mov
+
+            # print("movment:", movment)
 
             if algoParams["controls"]["target_trail_enabled"]:
                 target = (pos_entr_price + movment) + tgt
@@ -201,24 +230,41 @@ def _exit(
             if algoParams["controls"]["stoploss_trail_enabled"]:
                 sl = (pos_entr_price + movment) - stls
 
-            if (
-                row["close"] > pos_entr_price + target
-            ):  # ------------------------- target hit
+            if row["close"] > target:  # ------------------------- target hit
                 results.at[0, "exit_time"] = index
                 results.at[0, "exit"] = row["close"]
                 results.at[0, "exit_reason"] = "target"
                 results.at[0, "status"] = "signal-processed"
                 return results
 
-            elif row["close"] < (pos_entr_price - sl):  # -------- stoploss hit
+            elif row["close"] < sl:  # -------- stoploss hit
                 results.at[0, "exit_time"] = index
                 results.at[0, "exit"] = row["close"]
                 results.at[0, "exit_reason"] = "sl/deepsl"
                 results.at[0, "status"] = "signal-processed"
+
+                print(str(results.at[0, "exit_time"]))
+                debug_list.append(
+                    {
+                        "variable": "⚫ exit-"
+                        + str(results.at[0, "exit_reason"])
+                        + " # "
+                        + str(results.at[0, "exit_time"].time()),
+                        "value-x": str(results.at[0, "exit_time"].time()),
+                        "value-y": str(results.at[0, "exit"]),
+                        "value-print": str(results.at[0, "exit"]),
+                        "drawing": "vline",
+                        "draw_fill": "solid",
+                        "draw_color": "purple",
+                    }
+                )
+
+                json_object = json.dumps(debug_list)
+                results.at[0, "debug_exit"] = json_object
                 return results
 
-        start_time = posentr.replace(hour=15, minute=16, second=0)
-        end_time = posentr.replace(hour=15, minute=31, second=0)
+        start_time = pos_entr_time.replace(hour=15, minute=16, second=0)
+        end_time = pos_entr_time.replace(hour=15, minute=31, second=0)
 
         eod_cdls = libCdl.filterCandles(
             df,

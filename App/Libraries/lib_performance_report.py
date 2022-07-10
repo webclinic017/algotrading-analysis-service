@@ -94,20 +94,20 @@ def generate_performance_report(fin, df, fout):
     loss_time_max = result.loc[result["exit_reason"] == "sl/deepsl"]["time_diff"].max()
 
     # convert seconds to minutes
-    win_time_avg = round((win_time_avg / 60))
-    win_time_min = round((win_time_min / 60))
-    win_time_max = round((win_time_max / 60))
-    loss_time_avg = round((loss_time_avg / 60))
-    loss_time_min = round((loss_time_min / 60))
-    loss_time_max = round((loss_time_max / 60))
+    # win_time_avg = round((win_time_avg / 60))
+    # win_time_min = round((win_time_min / 60))
+    # win_time_max = round((win_time_max / 60))
+    # loss_time_avg = round((loss_time_avg / 60))
+    # loss_time_min = round((loss_time_min / 60))
+    # loss_time_max = round((loss_time_max / 60))
     # -------------------------------------------------------------------------------- save report csv
     result.to_csv(fout + ".csv")
 
     # -------------------------------------------------------------------------------- generate summary report
     report_summary = {
         "new-section-info": "info",
-        "strategy": result.iloc[0]["strategy"],
-        "instrument": result.iloc[0]["instr"],
+        "strategy": "sdf",  # result.iloc[0]["strategy"],
+        "instrument": "dsf",  # result.iloc[0]["instr"],
         "new-section-win-loss": "win-loss",  # ------------------------- section marker - win/loss
         "strike ratio": "Target : "
         + str(win_count)

@@ -42,7 +42,7 @@ def btResultsParser(
                 df_select = result[result["date"].astype(str).str[:10] == dt]
                 try:
                     dbg_var = json.loads(df_select.iloc[0]["debug"])
-                except:
+                except Exception as e:
                     dbg_var = ""
 
                 image_title = analysis_symbol + " " + dt
