@@ -14,7 +14,7 @@
 import json
 from datetime import datetime, timedelta
 
-import App.Libraries.lib_FN as libFn
+import App.Libraries.lib_fn as libFn
 import App.Libraries.lib_CANDLES as libCdl
 
 ENTRY_GAP_DELTA_PERCENTAGE = 0

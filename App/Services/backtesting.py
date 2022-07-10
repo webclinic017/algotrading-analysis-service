@@ -5,7 +5,7 @@ import json
 
 import App.DB.tsDB as db
 import App.Strategies.Strategies as s
-import App.Libraries.lib_FN as libFn
+import App.Libraries.lib_fn as libFn
 import App.Libraries.lib_BACKTEST as libBk
 
 
@@ -48,7 +48,7 @@ def backtesting(
                 len(df_entr),
             )
             return
-        print(df_entr)
+        # print(df_entr)
         if df_entr.at[0, "dir"] == "bullish" or df_entr.at[0, "dir"] == "bearish":
 
             df_exit = s.execute(

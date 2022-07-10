@@ -37,12 +37,13 @@ def generate_chart(dt, cdl, chart_file_name, myDpi, dbg_var):
 
 def calculate_text_markers(axlist, dt, dbg_var):
     for vars in dbg_var:  # ---------- print markers/info on chart
-        axlist[0].text(
-            Timestamp(dt + " " + vars["value-x"]),
-            float(vars["value-y"]),
-            str(vars["variable"]) + " " + str(vars["value-print"]),
-            alpha=0.5,
-        )
+        if len(vars):
+            axlist[0].text(
+                Timestamp(dt + " " + vars["value-x"]),
+                float(vars["value-y"]),
+                vars["comment"],
+                alpha=0.5,
+            )
 
     return axlist
 
@@ -64,20 +65,15 @@ def calculate_hvlines_info(dt, dbg_var):
     # }
 
     for vars in dbg_var:
-        if vars["drawing"] == "hline":
-            hlines_level.append(float(vars["value-y"]))
-            hlines_color.append(vars["draw_color"])
-            if vars["draw_fill"] == "dotted":
-                hlines_style.append("--")
-            else:
-                hlines_style.append("-")
-        elif vars["drawing"] == "vline":
-            vlines_level.append(dt + " " + (vars["value-x"]))
-            vlines_color.append(vars["draw_color"])
-            if vars["draw_fill"] == "dotted":
-                vlines_style.append("--")
-            else:
-                vlines_style.append("-")
+        if len(vars):
+            if vars["drawing"] == "hline":
+                hlines_level.append(float(vars["value-y"]))
+                hlines_color.append(vars["draw_color"])
+                hlines_style.append(vars["draw_fill"])
+            elif vars["drawing"] == "vline":
+                vlines_level.append(dt + " " + (vars["value-x"]))
+                vlines_color.append(vars["draw_color"])
+                vlines_style.append(vars["draw_fill"])
 
     hlines = dict(
         hlines=hlines_level,

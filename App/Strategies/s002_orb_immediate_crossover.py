@@ -17,6 +17,7 @@ import json
 from datetime import datetime, timedelta
 
 import App.Libraries.lib_CANDLES as libCdl
+from App.Libraries import *
 
 
 def analysis(
@@ -54,7 +55,7 @@ def analysis(
 
 def _entr(algoID, symbol, df, date, algoParams, results):
 
-    debug_list = []
+    d = []
 
     # --------------------------------------------------------------
     # Minimum data to be returned - status,date,instr,strategy,dir |
@@ -64,6 +65,7 @@ def _entr(algoID, symbol, df, date, algoParams, results):
     results.at[0, "date"] = trade_date(date)
     results.at[0, "status"] = "pending"
     results.at[0, "dir"] = "NA"
+    results.at[0, "debug_entr"] = "{}"
     # -------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -115,57 +117,14 @@ def _entr(algoID, symbol, df, date, algoParams, results):
         return results
 
     finally:
+        sl = results.at[0, "stoploss"]
 
-        debug_list.append(
-            {
-                "variable": "orb_low",
-                "value-x": "08:30",
-                "value-y": str(orb_low),
-                "value-print": str(orb_low),
-                "drawing": "hline",
-                "draw_fill": "solid",
-                "draw_color": "red",
-            }
-        )
-        debug_list.append(
-            {
-                "variable": "orb_high",
-                "value-x": "08:30",
-                "value-y": str(orb_high),
-                "value-print": str(orb_high),
-                "drawing": "hline",
-                "draw_fill": "solid",
-                "draw_color": "green",
-            }
-        )
+        d = lib_btfn.dbg(d, "08:30", orb_low, "orb_low", "hline|--|red")
+        d = lib_btfn.dbg(d, "08:30", orb_high, "orb_high", "hline|-.|green")
+        d = lib_btfn.dbg(d, "08:30", sl, "sl", "hline|-.|darkorange")
+        d = lib_btfn.dbg_enter(d, results)
 
-        debug_list.append(
-            {
-                "variable": "sl",
-                "value-x": "08:30",
-                "value-y": str(results.at[0, "stoploss"]),
-                "value-print": str(results.at[0, "stoploss"]),
-                "drawing": "hline.",
-                "draw_fill": "solid",
-                "draw_color": "orange",
-            }
-        )
-
-        if results.at[0, "dir"] != "NA":
-            debug_list.append(
-                {
-                    "variable": "⚡ entry",
-                    "value-x": str(results.at[0, "entry_time"].time()),
-                    "value-y": str(results.at[0, "entry"]),
-                    "value-print": str(results.at[0, "entry"]),
-                    "drawing": "vline",
-                    "draw_fill": "solid",
-                    "draw_color": "blue",
-                }
-            )
-
-        json_object = json.dumps(debug_list)
-
+        json_object = json.dumps(d)
         results.at[0, "debug_entr"] = json_object
         return results
 
@@ -182,8 +141,11 @@ def _exit(
     results,
 ):
 
-    debug_list = []
+    d = []
     s001_sentiment_analyser(df, pos_entr_time, pos_entr_price)
+
+    results.at[0, "debug_exit"] = "[{}]"
+    results.at[0, "exit_reason"] = ""
 
     # --------------------------------------------------------------------- sl & target
     stls = (algoParams["controls"]["stoploss_per"] / 100) * pos_entr_price
@@ -231,53 +193,20 @@ def _exit(
                 sl = (pos_entr_price + movment) - stls
 
             if row["close"] > target:  # ------------------------- target hit
-                results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row["close"]
-                results.at[0, "exit_reason"] = "target"
-                results.at[0, "status"] = "signal-processed"
-                return results
+                results = lib_fn.res_exit(results, index, row, "sl")
+                break
 
             elif row["close"] < sl:  # -------- stoploss hit
-                results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row["close"]
-                results.at[0, "exit_reason"] = "sl/deepsl"
-                results.at[0, "status"] = "signal-processed"
+                results = lib_fn.res_exit(results, index, row, "sl")
+                break
 
-                print(str(results.at[0, "exit_time"]))
-                debug_list.append(
-                    {
-                        "variable": "⚫ exit-"
-                        + str(results.at[0, "exit_reason"])
-                        + " # "
-                        + str(results.at[0, "exit_time"].time()),
-                        "value-x": str(results.at[0, "exit_time"].time()),
-                        "value-y": str(results.at[0, "exit"]),
-                        "value-print": str(results.at[0, "exit"]),
-                        "drawing": "vline",
-                        "draw_fill": "solid",
-                        "draw_color": "purple",
-                    }
-                )
+            d = lib_btfn.dbg_exit(d, results)
+            json_object = json.dumps(d)
+            results.at[0, "debug_exit"] = json_object
+            return results
 
-                json_object = json.dumps(debug_list)
-                results.at[0, "debug_exit"] = json_object
-                return results
-
-        start_time = pos_entr_time.replace(hour=15, minute=16, second=0)
-        end_time = pos_entr_time.replace(hour=15, minute=31, second=0)
-
-        eod_cdls = libCdl.filterCandles(
-            df,
-            start_time.strftime("%Y-%m-%d %H:%M:%S"),
-            end_time.strftime("%Y-%m-%d %H:%M:%S"),
-        )
-
-        if len(eod_cdls):
-            row = eod_cdls.iloc[0]
-            results.at[0, "exit_time"] = index
-            results.at[0, "exit"] = row["close"]
-            results.at[0, "exit_reason"] = "eod"
-            results.at[0, "status"] = "signal-processed"
+        results, ret = lib_fn.eod(df, results)
+        if ret:
             return results
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -304,34 +233,13 @@ def _exit(
             if (
                 row["close"] > pos_entr_price + target
             ):  # ------------------------- target hit
-                results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row["close"]
-                results.at[0, "exit_reason"] = "target"
-                results.at[0, "status"] = "signal-processed"
-                return results
+                return lib_fn.res_exit(results, index, row, "target")
             elif row["close"] < (pos_entr_price - sl):  # -------- stoploss hit
-                results.at[0, "exit_time"] = index
-                results.at[0, "exit"] = row["close"]
-                results.at[0, "exit_reason"] = "sl/deepsl"
-                results.at[0, "status"] = "signal-processed"
-                return results
+                return lib_fn.res_exit(results, index, row, "sl")
 
-        start_time = posentr.replace(hour=15, minute=16, second=0)
-        end_time = posentr.replace(hour=15, minute=31, second=0)
-
-        eod_cdls = libCdl.filterCandles(
-            df,
-            start_time.strftime("%Y-%m-%d %H:%M:%S"),
-            end_time.strftime("%Y-%m-%d %H:%M:%S"),
-        )
-
-        if len(eod_cdls):
-            row = eod_cdls.iloc[0]
-            results.at[0, "exit_time"] = index
-            results.at[0, "exit"] = row["close"]
-            results.at[0, "exit_reason"] = "eod"
-            results.at[0, "status"] = "signal-processed"
-            return results
+    results, ret = lib_fn.eod(df, results)
+    if ret:
+        return results
 
     else:
         return results
