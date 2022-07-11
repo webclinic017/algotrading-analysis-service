@@ -6,8 +6,18 @@ from App.Strategies import *
 import App.Libraries.lib_STRUCTS as libr
 
 
-def execute(env, dbConn, mode, algoID, symbol, date, pos_dir, pos_entr_price,
-            pos_entr_time, trading):
+def execute(
+    env,
+    dbConn,
+    mode,
+    algoID,
+    symbol,
+    date,
+    pos_dir,
+    pos_entr_price,
+    pos_entr_time,
+    trading,
+):
 
     summary = pd.DataFrame(columns=libr.trade_signal_hl)
     results = pd.DataFrame(columns=libr.trade_signal_hl)
@@ -16,16 +26,15 @@ def execute(env, dbConn, mode, algoID, symbol, date, pos_dir, pos_entr_price,
     # 1. Fetch params for algo
     algoParams = db.readAlgoParams(env, dbConn, algoID[0:7])
     if algoParams == None:
-        summary.at[0, "status"] = "ERR: No algoParams found for " + algoID[
-            0:7] + " on " + date
+        summary.at[0, "status"] = (
+            "ERR: No algoParams found for " + algoID[0:7] + " on " + date
+        )
         return returnValues(summary, trading)
 
     # 2. Fetch candles as per algoParams interval defined for the day
     cdl = db.getCdlBtwnTime(env, dbConn, symbol, date, ["09:00", "16:00"], "1")
     if len(cdl) == 0:
-        summary.at[
-            0,
-            "status"] = "ERR: No candles found for " + symbol + " on " + date
+        summary.at[0, "status"] = "ERR: No candles found for " + symbol + " on " + date
         return returnValues(summary, trading)
 
     # 3. Run algo for each symbol
@@ -33,23 +42,41 @@ def execute(env, dbConn, mode, algoID, symbol, date, pos_dir, pos_entr_price,
 
     sym = cdl.symbol.unique()
     for x in range(len(sym)):
-        rslt_df = cdl[cdl['symbol'] == sym[x]]
+        rslt_df = cdl[cdl["symbol"] == sym[x]]
 
         if baseAlgo == "s001":
 
-            S001_ORB_F.S001_ORB(algoID, mode, symbol, rslt_df, date,
-                                algoParams, pos_dir, pos_entr_price,
-                                pos_entr_time, results)
+            S001_ORB_F.S001_ORB(
+                algoID,
+                mode,
+                symbol,
+                rslt_df,
+                date,
+                algoParams,
+                pos_dir,
+                pos_entr_price,
+                pos_entr_time,
+                results,
+            )
 
         elif baseAlgo == "s002":
-            s002_orb_immediate_crossover.analysis(algoID, mode, symbol,
-                                                  rslt_df, date, algoParams,
-                                                  pos_dir, pos_entr_price,
-                                                  pos_entr_time, results)
+            s002_orb_immediate_crossover.analysis(
+                algoID,
+                mode,
+                symbol,
+                rslt_df,
+                date,
+                algoParams,
+                pos_dir,
+                pos_entr_price,
+                pos_entr_time,
+                results,
+            )
 
         elif baseAlgo == "s999":
-            S999_TEST_F.return_success_test(algoID, symbol, cdl, date,
-                                            algoParams, results)
+            S999_TEST_F.return_success_test(
+                algoID, symbol, cdl, date, algoParams, results
+            )
 
         else:
             return "No Algo Found"

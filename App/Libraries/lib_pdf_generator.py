@@ -10,6 +10,7 @@ import App.DB.tsDB as db
 def generate_pdf_report(
     fname, analysis_symbol, analysis_algorithm, f, charts_list, plot_images, report_data
 ):
+
     print("Generating PDF : ", fname + ".pdf")
     # print(report_data)
     pdf = FPDF()
@@ -78,7 +79,7 @@ def generate_pdf_report(
     pdf.close()
 
 
-def generate_report_table(pdf, report):
+def generate_report_table(pdf, report_dict):
 
     pdf.start_section("Simulation Report", level=1)
 
@@ -89,7 +90,7 @@ def generate_report_table(pdf, report):
     col_width = pdf.epw / 4  # distribute content evenly
 
     split = 0
-    for row in report.items():
+    for row in report_dict.items():
         # BUG: this is wrong probably , need iterrows ???
         if row[0].find("new-section") >= 0:
             if split == 1:  # odd no of cells, print a line to reserve space

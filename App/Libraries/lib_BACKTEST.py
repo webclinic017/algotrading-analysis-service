@@ -23,11 +23,13 @@ def btResultsParser(
     analysis_duration_backward,
 ):
 
+    algoParams = db.readAlgoParams(env, dbConn, analysis_algorithm[0:7])
+
     f, file_id, ftitle = get_filenames(analysis_symbol, analysis_duration_backward)
 
     result, dates = sort_dates_on_direction(result)
 
-    report = pr.generate_performance_report("", result, f)
+    report = pr.generate_performance_report("", result, algoParams, f)
 
     # -------------------------------------------------------------------- Generate pdf (with charts)
     charts_list = []

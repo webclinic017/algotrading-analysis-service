@@ -23,8 +23,7 @@
 #
 # ["algo_specific"]
 #   -   ["enter_confirmation_per"]
-#   -   ["sentiment_analyser_enabled"]  - to enable disbale the check
-#   -   ["sentiment_period_seconds"]    - Period to be checked
+#   -   ["sentiment_period_seconds"]    - Period to be checked [0: disabled, NUM - enabled]
 #   -   ["sentiment_buy_sell_gap_per"]  - difference between buy/sell to be considered
 # ["controls"]
 #   -   ["target_per"]
@@ -134,9 +133,11 @@ def _entr(algoID, symbol, df, date, algoParams, results):
         # -------------------------------------------------------------------- debug info
         d = []
         sl = results.at[0, "stoploss"]
-        d = lib_btfn.dbg(d, "08:30", orb_low, "orb_low", "hline|-.|red")
-        d = lib_btfn.dbg(d, "08:30", orb_high, "orb_high", "hline|-.|green")
-        d = lib_btfn.dbg(d, "08:30", sl, "sl", "hline|--|darkorange")
+        tgt = results.at[0, "target"]
+        d = lib_btfn.dbg(d, "08:30", orb_low, "orb_low", "hline|solid|red")
+        d = lib_btfn.dbg(d, "08:30", orb_high, "orb_high", "hline|solid|green")
+        d = lib_btfn.dbg(d, "08:30", sl, "sl", "hline|-.|darkorange")
+        d = lib_btfn.dbg(d, "08:30", tgt, "target", "hline|--|darkorange")
         d = lib_btfn.dbg_enter(d, results)
         results.at[0, "debug_entr"] = json.dumps(d)
 
@@ -186,11 +187,15 @@ def _exit(
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if pos_dir.lower() == "bullish":
         movment = 0
+
         #                                                                      scan all candles
         for index, row in active_cdls.iterrows():
+            cl = row["close"]
+            target = tgt
+            sl = stls
             # ---------------------------------------------------------------- trail calculations (when price moved in dir)
-            if row["close"] > pos_entr_price:
-                curr_mov = row["close"] - pos_entr_price
+            if cl > pos_entr_price:
+                curr_mov = cl - pos_entr_price
                 #                                                              new movement higher than previous
                 if curr_mov > movment:
                     movment = curr_mov
@@ -202,17 +207,20 @@ def _exit(
                 sl = (pos_entr_price + movment) - stls
 
             # ---------------------------------------------------------------- target hit
-            if row["close"] > target:
-                results = lib_fn.res_exit(results, index, row, "sl")
+            if cl > target:
+                results = lib_fn.res_exit(results, index, row, "target")
                 break
 
             # ---------------------------------------------------------------- stoploss hit
-            elif row["close"] < sl:
+            elif cl < sl:
                 results = lib_fn.res_exit(results, index, row, "sl")
                 break
 
             # ---------------------------------------------------------------- sentiments
-            elif s001_sentiment_analyser(algoParams, df, pos_entr_time, pos_entr_price):
+            elif _sentiment_reversed(
+                algoParams, index, active_cdls, pos_entr_time, "bullish"
+            ):
+                results = lib_fn.res_exit(results, index, row, "sentiment")
                 break
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -222,9 +230,12 @@ def _exit(
         movment = 0
         #                                                                      scan all candles
         for index, row in active_cdls.iterrows():
+            cl = row["close"]
+            target = tgt
+            sl = stls
             # ---------------------------------------------------------------- trail calculations (if price moved in direction)
-            if row["close"] < pos_entr_price:
-                curr_mov = pos_entr_price - row["close"]
+            if cl < pos_entr_price:
+                curr_mov = pos_entr_price - cl
                 if curr_mov > movment:  # new movement higher than previous
                     movment = curr_mov
 
@@ -235,15 +246,20 @@ def _exit(
                 sl = (pos_entr_price - movment) + stls
 
             # ---------------------------------------------------------------- target hit
-            if row["close"] > target:
-                return lib_fn.res_exit(results, index, row, "target")
+            if cl < target:
+                results = lib_fn.res_exit(results, index, row, "target")
+                break
 
             # ---------------------------------------------------------------- stoploss hit
-            elif row["close"] < sl:
-                return lib_fn.res_exit(results, index, row, "sl")
+            elif cl > sl:
+                results = lib_fn.res_exit(results, index, row, "sl")
+                break
 
             # ---------------------------------------------------------------- sentiments
-            elif s001_sentiment_analyser(algoParams, df, pos_entr_time, pos_entr_price):
+            elif _sentiment_reversed(
+                algoParams, index, active_cdls, pos_entr_time, "bearish"
+            ):
+                results = lib_fn.res_exit(results, index, row, "sentiment")
                 break
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -262,10 +278,33 @@ def _exit(
 # ----------------------------------------------------------------------------
 # SENTIMENT ANALYSER
 # ----------------------------------------------------------------------------
-def s001_sentiment_analyser(algoParams, df, pos_entr_time, pos_entr_price):
+def _sentiment_reversed(algoParams, index, df, pos_entr_time, dir):
 
-    if algoParams["algo_specific"]["sentiment_analyser_enabled"]:
+    c = ""
+    # -----------------------------------------------------------------------  senti analysis enabled?
+    s = algoParams["algo_specific"]["sentiment_period_seconds"]
+    if s == 0:
+        return False
 
-        return False
-    else:
-        return False
+    # ------------------------------------------------------------------------ scan after gap is covered
+    gap = (index - pos_entr_time).total_seconds()
+    if gap >= s:
+        data = df.loc[index - timedelta(seconds=s - 1) : index]
+        b = data["buy_demand"].sum()
+        s = data["sell_demand"].sum()
+
+        # -------------------------------------------------------------------- check buyer/seller who is more active
+        delta = abs(b - s)
+        delta = (delta / (b + s)) * 100
+        if delta > algoParams["algo_specific"]["sentiment_buy_sell_gap_per"]:
+            if b > s:
+                c = "bullish"
+            else:
+                c = "bearish"
+        else:
+            c = "stall"
+        # --------------------------------------------------------------------- in same direction
+        if c == dir:
+            return False
+        else:
+            return True

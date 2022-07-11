@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import math
+import json
 
 
 def fn_time_diff(row):
@@ -24,10 +26,10 @@ def fn_gains(row):
         elif row["dir"] == "bullish":
             val = row["exit"] - row["entry"]
     finally:
-        return val
+        return round(val)
 
 
-def generate_performance_report(fin, df, fout):
+def generate_performance_report(fin, df, algoParams, fout):
 
     # load df from csv file
     if fin != "":
@@ -94,20 +96,20 @@ def generate_performance_report(fin, df, fout):
     loss_time_max = result.loc[result["exit_reason"] == "sl/deepsl"]["time_diff"].max()
 
     # convert seconds to minutes
-    # win_time_avg = round((win_time_avg / 60))
-    # win_time_min = round((win_time_min / 60))
-    # win_time_max = round((win_time_max / 60))
-    # loss_time_avg = round((loss_time_avg / 60))
-    # loss_time_min = round((loss_time_min / 60))
-    # loss_time_max = round((loss_time_max / 60))
+    win_time_avg = _human((win_time_avg / 60))
+    win_time_min = _human((win_time_min / 60))
+    win_time_max = _human((win_time_max / 60))
+    loss_time_avg = _human((loss_time_avg / 60))
+    loss_time_min = _human((loss_time_min / 60))
+    loss_time_max = _human((loss_time_max / 60))
     # -------------------------------------------------------------------------------- save report csv
     result.to_csv(fout + ".csv")
 
     # -------------------------------------------------------------------------------- generate summary report
     report_summary = {
         "new-section-info": "info",
-        "strategy": "sdf",  # result.iloc[0]["strategy"],
-        "instrument": "dsf",  # result.iloc[0]["instr"],
+        "strategy": result.iloc[0]["strategy"],
+        "instrument": result.iloc[0]["instr"],
         "new-section-win-loss": "win-loss",  # ------------------------- section marker - win/loss
         "strike ratio": "Target : "
         + str(win_count)
@@ -153,4 +155,15 @@ def generate_performance_report(fin, df, fout):
         "na": str(na_count),
     }
 
-    return report_summary
+    with open(fout + ".json", "w") as file:
+        rs = {"report_summary": report_summary, "parameters": algoParams}
+        file.write(json.dumps(rs, indent=2))
+
+    return rs
+
+
+def _human(v):
+    if math.isnan(v):
+        return v
+    else:
+        return round((v / 60))
