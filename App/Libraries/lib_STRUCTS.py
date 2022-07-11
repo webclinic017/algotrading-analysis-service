@@ -1,15 +1,33 @@
 trade_signal_hl = [
-    'status',
-    'id',
-    'date',
-    'instr',
-    'strategy',
-    'dir',
-    'entry',
-    'target',
-    'stoploss',
+    "status",
+    "id",
+    "date",
+    "instr",
+    "strategy",
+    "dir",
+    "entry",
+    "target",
+    "stoploss",
+    "debug_entr",
+    "entry_time",
+    "exit",
+    "exit_time",
+    "exit_reason",
+    "debug",
+    "gain",
+    "time_diff",
 ]
 
-candles_hl = ['Date', 'DateStr','TimeStr' ,\
-                   'Open', 'High', 'Low', 'Close', \
-                   'Null1', 'Null2', 'Null3', 'Null4']
+candles_hl = [
+    "Date",
+    "DateStr",
+    "TimeStr",
+    "Open",
+    "High",
+    "Low",
+    "Close",
+    "Null1",
+    "Null2",
+    "Null3",
+    "Null4",
+]

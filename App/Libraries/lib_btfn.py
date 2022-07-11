@@ -4,7 +4,7 @@ def dbg(l, x, y, s, d):
 
     l.append(
         {
-            "comment": s,
+            "comment": s + " \n" + str(y),
             "value-x": str(x),
             "value-y": str(y),
             "drawing": z[0],
@@ -19,9 +19,11 @@ def dbg_enter(l, df):
     if df.at[0, "dir"] != "NA":
         l.append(
             {
-                "comment": "⚡ entry "
-                + str(df.at[0, "entry"])
-                + str(df.at[0, "entry_time"].time()),
+                "comment": str(df.at[0, "entry"])
+                + "\n"
+                + str(df.at[0, "entry_time"].time())
+                + "\n"
+                + "⚡ entry",
                 "value-x": str(df.at[0, "entry_time"].time()),
                 "value-y": str(df.at[0, "entry"]),
                 "drawing": "vline",
@@ -33,18 +35,20 @@ def dbg_enter(l, df):
 
 
 def dbg_exit(l, df):
-    l.append(
-        {
-            "comment": "⚫ exit-"
-            + str(df.at[0, "exit"])
-            + str(df.at[0, "exit_reason"])
-            + " # "
-            + str(df.at[0, "exit_time"].time()),
-            "value-x": str(df.at[0, "exit_time"].time()),
-            "value-y": str(df.at[0, "exit"]),
-            "drawing": "vline",
-            "draw_fill": "solid",
-            "draw_color": "purple",
-        }
-    )
+    if df.at[0, "exit_reason"] != "":
+        l.append(
+            {
+                "comment": str(df.at[0, "exit"])
+                + "\n"
+                + str(df.at[0, "exit_time"].time())
+                + "\n"
+                + "⚫ exit-"
+                + str(df.at[0, "exit_reason"]),
+                "value-x": str(df.at[0, "exit_time"].time()),
+                "value-y": str(df.at[0, "exit"]),
+                "drawing": "vline",
+                "draw_fill": "solid",
+                "draw_color": "purple",
+            }
+        )
     return l

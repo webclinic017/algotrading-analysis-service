@@ -1,16 +1,38 @@
-# Strategy Name -
-# ---------------------------ENTRY--------------------------------
-# Candle Size -  Min
+# ----------------------------------------------------------------
+#  Strategy Name - ORB with Immediate Crossover
+# ----------------------------------------------------------------
+
+
+# ----------------------------DATA--------------------------------
 #
+# Candle Size   #1 Min
+# Subscription -
+#
+# ---------------------------ENTRY--------------------------------
+#
+# (cdl_close) > (orb_high + {enter_confirmation_per} )
+# (cdl_close) < (orb_low - {enter_confirmation_per} )
 #
 # ----------------------------EXIT--------------------------------
-# SL     -
-# Exit   -
-# DeepSL -
-# ----------------------------SUBs--------------------------------
-# Subscription -
+#
+# SL            - Based on cfg param {stoploss_per}
+# Target        - Based on cfg param {target_per}
+# Sentinment    - Based on cfg param {sentiment_analyser_enabled}
+#
 # -------------------------ALGO PARAMS----------------------------
-# var 1 -
+#
+# ["algo_specific"]
+#   -   ["enter_confirmation_per"]
+#   -   ["sentiment_analyser_enabled"]  - to enable disbale the check
+#   -   ["sentiment_period_seconds"]    - Period to be checked
+#   -   ["sentiment_buy_sell_gap_per"]  - difference between buy/sell to be considered
+# ["controls"]
+#   -   ["target_per"]
+#   -   ["stoploss_per"]
+#   -   ["delayed_stoploss_seconds"]
+#   -   ["target_trail_enabled"]
+#   -   ["stoploss_trail_enabled"]
+#
 # ----------------------------------------------------------------
 
 import json
@@ -53,31 +75,23 @@ def analysis(
     return results
 
 
+# ----------------------------------------------------------------------------
+# ENTER
+# ----------------------------------------------------------------------------
 def _entr(algoID, symbol, df, date, algoParams, results):
 
-    d = []
-
-    # --------------------------------------------------------------
-    # Minimum data to be returned - status,date,instr,strategy,dir |
-    # --------------------------------------------------------------
+    # ------------------------------------------------------------------------ minimum data
     results.at[0, "instr"] = symbol
     results.at[0, "strategy"] = algoID
-    results.at[0, "date"] = trade_date(date)
+    results.at[0, "date"] = date
     results.at[0, "status"] = "pending"
     results.at[0, "dir"] = "NA"
     results.at[0, "debug_entr"] = "{}"
-    # -------------------------------------------------------------
 
-    # --------------------------------------------------------------
-    # Strategy                                                    |
-    # --------------------------------------------------------------
-
+    # ------------------------------------------------------------------------ strategy                                                     |
     try:
-
         orb = df.between_time("9:15", "9:30")
-        # print(check)
-
-        # Get ORB
+        # -------------------------------------------------------------------- calculate ORB
         orb_low = orb["low"].min()
         orb_high = orb["high"].max()
 
@@ -117,18 +131,21 @@ def _entr(algoID, symbol, df, date, algoParams, results):
         return results
 
     finally:
+        # -------------------------------------------------------------------- debug info
+        d = []
         sl = results.at[0, "stoploss"]
-
-        d = lib_btfn.dbg(d, "08:30", orb_low, "orb_low", "hline|--|red")
+        d = lib_btfn.dbg(d, "08:30", orb_low, "orb_low", "hline|-.|red")
         d = lib_btfn.dbg(d, "08:30", orb_high, "orb_high", "hline|-.|green")
-        d = lib_btfn.dbg(d, "08:30", sl, "sl", "hline|-.|darkorange")
+        d = lib_btfn.dbg(d, "08:30", sl, "sl", "hline|--|darkorange")
         d = lib_btfn.dbg_enter(d, results)
+        results.at[0, "debug_entr"] = json.dumps(d)
 
-        json_object = json.dumps(d)
-        results.at[0, "debug_entr"] = json_object
         return results
 
 
+# ----------------------------------------------------------------------------
+# EXIT
+# ----------------------------------------------------------------------------
 def _exit(
     algoID,
     symbol,
@@ -141,19 +158,16 @@ def _exit(
     results,
 ):
 
-    d = []
-    s001_sentiment_analyser(df, pos_entr_time, pos_entr_price)
-
+    # ------------------------------------------------------------------------ minimum data
     results.at[0, "debug_exit"] = "[{}]"
     results.at[0, "exit_reason"] = ""
 
-    # --------------------------------------------------------------------- sl & target
+    # ------------------------------------------------------------------------ sl & target
     stls = (algoParams["controls"]["stoploss_per"] / 100) * pos_entr_price
     tgt = (algoParams["controls"]["target_per"] / 100) * pos_entr_price
 
-    # --------------------------------------------------------------------- filter cdl (with delayed sl)
+    # ------------------------------------------------------------------------ filter cdl (with delayed sl)
     dly_sl = algoParams["controls"]["delayed_stoploss_seconds"]
-    # posentr = datetime.strptime(pos_entr_time, "%Y-%m-%d %H:%M:%S")
 
     if dly_sl != 0:
         start_time = pos_entr_time + timedelta(seconds=dly_sl)
@@ -170,21 +184,16 @@ def _exit(
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Bullish
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    movment = 0
     if pos_dir.lower() == "bullish":
-        # ------------------------------------------------------------------------- scan all candles
+        movment = 0
+        #                                                                      scan all candles
         for index, row in active_cdls.iterrows():
-
-            # print(row)
-            # --------------------------------------------------------------------- trail calculations
-            if (
-                row["close"] > pos_entr_price
-            ):  # ---------------------------------- if price moved in direction
+            # ---------------------------------------------------------------- trail calculations (when price moved in dir)
+            if row["close"] > pos_entr_price:
                 curr_mov = row["close"] - pos_entr_price
-                if curr_mov > movment:  # new movement higher than previous
+                #                                                              new movement higher than previous
+                if curr_mov > movment:
                     movment = curr_mov
-
-            # print("movment:", movment)
 
             if algoParams["controls"]["target_trail_enabled"]:
                 target = (pos_entr_price + movment) + tgt
@@ -192,37 +201,32 @@ def _exit(
             if algoParams["controls"]["stoploss_trail_enabled"]:
                 sl = (pos_entr_price + movment) - stls
 
-            if row["close"] > target:  # ------------------------- target hit
+            # ---------------------------------------------------------------- target hit
+            if row["close"] > target:
                 results = lib_fn.res_exit(results, index, row, "sl")
                 break
 
-            elif row["close"] < sl:  # -------- stoploss hit
+            # ---------------------------------------------------------------- stoploss hit
+            elif row["close"] < sl:
                 results = lib_fn.res_exit(results, index, row, "sl")
                 break
 
-            d = lib_btfn.dbg_exit(d, results)
-            json_object = json.dumps(d)
-            results.at[0, "debug_exit"] = json_object
-            return results
-
-        results, ret = lib_fn.eod(df, results)
-        if ret:
-            return results
+            # ---------------------------------------------------------------- sentiments
+            elif s001_sentiment_analyser(algoParams, df, pos_entr_time, pos_entr_price):
+                break
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Bearish
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     elif pos_dir.lower() == "bearish":
-        # ------------------------------------------------------------------------- scan all candles
+        movment = 0
+        #                                                                      scan all candles
         for index, row in active_cdls.iterrows():
-
-            # --------------------------------------------------------------------- trail calculations
-            if (
-                row["close"] < pos_entr_price
-            ):  # ---------------------------------- if price moved in direction
-                movment = pos_entr_price - row["close"]
-            else:
-                movment = 0
+            # ---------------------------------------------------------------- trail calculations (if price moved in direction)
+            if row["close"] < pos_entr_price:
+                curr_mov = pos_entr_price - row["close"]
+                if curr_mov > movment:  # new movement higher than previous
+                    movment = curr_mov
 
             if algoParams["controls"]["target_trail_enabled"]:
                 target = (pos_entr_price - movment) - tgt
@@ -230,35 +234,38 @@ def _exit(
             if algoParams["controls"]["stoploss_trail_enabled"]:
                 sl = (pos_entr_price - movment) + stls
 
-            if (
-                row["close"] > pos_entr_price + target
-            ):  # ------------------------- target hit
+            # ---------------------------------------------------------------- target hit
+            if row["close"] > target:
                 return lib_fn.res_exit(results, index, row, "target")
-            elif row["close"] < (pos_entr_price - sl):  # -------- stoploss hit
+
+            # ---------------------------------------------------------------- stoploss hit
+            elif row["close"] < sl:
                 return lib_fn.res_exit(results, index, row, "sl")
 
-    results, ret = lib_fn.eod(df, results)
-    if ret:
-        return results
+            # ---------------------------------------------------------------- sentiments
+            elif s001_sentiment_analyser(algoParams, df, pos_entr_time, pos_entr_price):
+                break
 
-    else:
-        return results
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Common Routine
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #                                                                          eod check
+    results = lib_fn.eod(df, results)
+
+    # ------------------------------------------------------------------------ debug info
+    d = []
+    results.at[0, "debug_exit"] = json.dumps(lib_btfn.dbg_exit(d, results))
 
     return results
 
 
-def s001_sentiment_analyser(df, pos_entr_time, pos_entr_price):
+# ----------------------------------------------------------------------------
+# SENTIMENT ANALYSER
+# ----------------------------------------------------------------------------
+def s001_sentiment_analyser(algoParams, df, pos_entr_time, pos_entr_price):
 
-    return 0
+    if algoParams["algo_specific"]["sentiment_analyser_enabled"]:
 
-
-# Scan date to be used for backtesting, else use current date for real trading
-def trade_date(date):
-    date_time_obj = datetime.strptime(date, "%Y-%m-%d")
-
-    if date_time_obj.date() != datetime.today().date():
-        timeStamp = date + " 09:30:00"
+        return False
     else:
-        timeStamp = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-
-    return timeStamp
+        return False
